@@ -1,10 +1,115 @@
-﻿# 🗒️ LOGS.md — Change Log
+# 🗒️ LOGS.md — Change Log
 
 > Every edit to any file in this workspace gets a collapsible entry here with a before/after diff, per `RULES.md` rule 2. No exceptions, no silent batching.
 
 ---
 
 ## 2026-09-22
+
+<details>
+<summary>2026-09-22 — github.md — Add Section 15: Real-world emergency scenarios and high-impact fixes</summary>
+
+**Before:**
+Sections 1–14 ending at GitHub collaboration best practices.
+
+**After:**
+Added Section 15 with 8 subsections:
+1. Leaked secrets & private keys pushed to GitHub (`git-filter-repo`, BFG, emergency revocation, and force push warnings).
+2. The 100MB giant file rejection trap by GitHub and Git LFS configuration.
+3. Recovering from committing directly to `main` instead of a feature branch.
+4. Escaping and understanding the "Detached HEAD" state safely.
+5. Windows vs Linux CRLF vs LF line endings hell & `.gitattributes` renormalization.
+6. Keeping an out-of-date feature branch in sync with `main` via merge vs rebase (`--force-with-lease`).
+7. Windows file case-sensitivity rename bugs (`git mv`).
+8. Advanced stashing (untracked files `-u`, inspecting without popping, and `git stash branch`).
+
+**Why:** Documented mission-critical edge cases and emergency rescue workflows frequently encountered in collaborative and Solana/Rust development.
+</details>
+
+<details>
+<summary>2026-09-22 — github.md — Expand guide with merge conflicts, rebase vs merge, reflog, bisect, tags, worktrees & collaboration</summary>
+
+**Before:**
+Sections 1–6 (Trees & HEAD, rollback scenarios, interactive rebase, cherry-pick, basic cheatsheet, basic GitHub actions).
+
+**After:**
+Sections 1–14 (Added merge conflict resolution with marker breakdowns, merge vs rebase comparison, squashing 5 commits into 1, `git reflog` disaster recovery, `git bisect` binary search debugging, semantic tags & releases, `git worktree` concurrent branch workflow, `git blame` & pickaxe search, untracked junk cleanup with `git clean`, and open-source GitHub collaboration with SSH authentication & upstream remotes).
+
+**Why:** Comprehensive real-world Git and GitHub operational manual requested by learner covering advanced survival tools, debugging, and team collaboration workflows.
+</details>
+
+<details>
+<summary>2026-09-22 — github.md — Create beginner-friendly Git & GitHub reference and actions guide</summary>
+
+**Before:**
+*(file did not exist)*
+
+**After:**
+*(Created `github.md` with sections on Git 3 trees, HEAD mental model, rollback scenarios, interactive rebase commit modification, cherry-picking, daily command cheatsheet, and GitHub Actions CI YAML configuration)*
+
+**Why:** Provided an accessible, practical Git reference answering rollback scenarios, commit modification, cherry-picking, and CI/CD setup for the project.
+</details>
+
+<details>
+<summary>2026-09-22 — .gitignore — Add comprehensive Rust, Solana, database, and IDE ignore patterns</summary>
+
+**Before:**
+```gitignore
+/target
+/HISTORY.md
+```
+
+**After:**
+```gitignore
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Solana local wallet keypairs & credentials
+id.json
+*-keypair.json
+
+# Local data & database directories
+/data/
+/postgres-data/
+/redis-data/
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# Profiling, benchmarking & coverage
+flamegraph.svg
+perf.data*
+criterion/
+
+# IDE & Editor artifacts
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Project specific
+/HISTORY.md
+```
+
+**Why:** Added industry-standard ignore rules covering Rust target files, Solana keypairs/secrets, environment variables, local database directories, profiling outputs, and editor artifacts while keeping `/HISTORY.md`.
+</details>
 
 <details>
 <summary>2026-09-22 — .agents/workflows/next.md — Harmonize workflow for Solana Indexer 7-day sprint</summary>
