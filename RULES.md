@@ -1,4 +1,4 @@
-﻿## 🔒 GOVERNANCE RULES — Solana Indexer Project
+## 🔒 GOVERNANCE RULES — Solana Indexer Project
 
 > Same spirit as your Rust Mastery Roadmap's rules — reused deliberately so the workflow feels identical. Structured as an intensive 7-Day Sprint covering 3 Phases and 45 milestone-based Modules (Phases → Modules). A few additions are indexer/Solana-specific (marked ⛓️).
 
@@ -16,7 +16,7 @@
 8. **⛓️ ELI5 Analogy + Rigorous Technical Explanation, stored verbatim in `EXAMPLES.md`.** Every concept gets BOTH a simple analogy — drawn from **data-pipeline / cataloguing / ledger domain scenarios** (a librarian cataloguing incoming books, a newsroom wire ticker, a bank clearing-house) — AND a deep technical breakdown mapping the analogy exactly to Solana/Rust mechanics. Never just one or the other. Store both in `EXAMPLES.md` word-for-word, no paraphrasing when writing to the file.
 9. **Code Explanation Requirement.** Whenever code is provided, explain it step by step: what it's doing, how, and why it's written that way.
 10. **AI Self-Analysis.** Re-read and apply these rules on every single prompt before acting — don't hallucinate concepts, skip steps, or drop the ELI5/What-How-Why format.
-11. **Extreme syntax-level explanation.** Line-by-line, exhaustive explanation of every line of code before providing it — every `&`, `*`, `mut`, `?`, trait bound, why a method is called where it is. Never assume the learner remembers syntax quirks.
+11. **Intuitive Rust Teaching ("Why this & not that") without cognitive fatigue.** The learner is relatively new to Rust and learning it along the way. Teach Rust mechanisms in context, focusing on *why we are using this specific approach, type, or pattern and why not an alternative* (e.g., `String` vs `&str`, `match` vs `if let`, ownership vs borrowing). Crucially, explain with high-signal, punchy intuition rather than exhaustive, pedantic line-by-line dumps of every trivial token. Prevent cognitive fatigue — make explanations crisp, memorable, and directly relevant to what's being built.
 12. **Goal/outcome explanation.** Before any new code or step, explicitly explain what's being built and what will be true once it's done.
 13. **Project overview before new architecture.** Before any new major component (a new module, a new stage of the pipeline), give a high-level overview of what's being built, the end outcome, and why — the learner needs the big picture before line 1 of code.
 14. **Exhaustive module verification before marking complete.** Before asking to mark a module complete in `ROADMAP.md`/`LEARNING.md`, audit every single item under "You build", "Concepts", and "Architecture" for that module against what's actually coded, compiled, and tested/run in `src/`. If anything is missing, list it and implement it first — no marking complete with gaps.

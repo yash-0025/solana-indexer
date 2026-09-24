@@ -7,6 +7,99 @@
 ## 2026-09-24
 
 <details>
+<summary>2026-09-24 — RULES.md & next.md & Conversation.md — Calibrate Rust teaching to 'Why this & not that' and prevent fatigue</summary>
+
+**Before (RULES.md Rule 11):**
+```markdown
+11. **Extreme syntax-level explanation.** Line-by-line, exhaustive explanation of every line of code before providing it — every `&`, `*`, `mut`, `?`, trait bound, why a method is called where it is. Never assume the learner remembers syntax quirks.
+```
+
+**After (RULES.md Rule 11):**
+```markdown
+11. **Intuitive Rust Teaching ("Why this & not that") without cognitive fatigue.** The learner is relatively new to Rust and learning it along the way. Teach Rust mechanisms in context, focusing on *why we are using this specific approach, type, or pattern and why not an alternative* (e.g., `String` vs `&str`, `match` vs `if let`, ownership vs borrowing). Crucially, explain with high-signal, punchy intuition rather than exhaustive, pedantic line-by-line dumps of every trivial token. Prevent cognitive fatigue — make explanations crisp, memorable, and directly relevant to what's being built.
+```
+
+**Changes in .agents/workflows/next.md:**
+Updated Step 3 point 10 to reflect the updated Rule 11 approach.
+
+**Changes in Conversation.md:**
+Logged discussion on learning style calibration, prioritizing intuitive conceptual trade-offs over academic line-by-line dumps.
+
+**Why:** Learner explicitly requested teaching Rust along the way focusing on why specific constructs are chosen over alternatives, while avoiding overly detailed token-by-token dumps that cause cognitive fatigue.
+</details>
+
+<details>
+<summary>2026-09-24 — EXERCISES.md — Add Exercise 1.1 skeleton for RPC client and cluster connectivity</summary>
+
+**Before:**
+```markdown
+## Open / In-Progress
+
+*(Empty — your first exercise lands here once Day 1 starts.)*
+```
+
+**After:**
+```markdown
+## Open / In-Progress
+
+### Exercise 1.1 (Day 1) — Initializing RpcClient & Cluster Connectivity Handshake
+**Status:** open
+**Goal:** Verify toolchain, dependencies, and cluster connectivity by querying a live Solana RPC endpoint version.
+
+**Skeleton:**
+```rust
+use solana_client::rpc_client::RpcClient;
+
+fn main() {
+    println!("==================================================");
+    println!("          SOLANA INDEXER — PHASE 1 CLI            ");
+    println!("==================================================");
+
+    let rpc_url = "https://api.devnet.solana.com";
+    println!("[*] Connecting to RPC endpoint: {}", rpc_url);
+
+    // TODO(1): Instantiate a synchronous `RpcClient` using `RpcClient::new(rpc_url.to_string())`
+    // TODO(2): Call `.get_version()` on the client to fetch the remote node version
+    // TODO(3): Match on the Result:
+    //          - On Ok(v), print "[+] Connected! Node version: {}" with the `solana_core` field
+    //          - On Err(e), print "[-] Connection failed: {}" and call `std::process::exit(1)`
+    todo!()
+}
+```
+
+**Constraints:** Keep it synchronous (blocking `RpcClient`); do not use `async` or `tokio` yet.
+**Hints used:** 0/3
+**My attempt:** *(paste here when ready, even if broken/partial)*
+```
+
+**Why:** Provided skeleton exercise for Module 1.1 cluster connectivity handshake per Rule 17 and Step 3.5.
+</details>
+
+<details>
+<summary>2026-09-24 — EXAMPLES.md — Add ELI5 and technical explanation for Module 1.1</summary>
+
+**Before:**
+```markdown
+---
+
+*(Empty — concepts land here as Day 1 begins.)*
+```
+
+**After:**
+```markdown
+### 1.1 — Connecting to the Cluster (The Wire Ticker Handshake)
+
+**ELI5 (domain analogy):**
+> Imagine setting up a dedicated terminal in a busy financial newsroom to monitor incoming telegraph dispatches from a central stock exchange. Before you write any parsing rules, print fancy headlines, or file reports into drawers, the very first thing you must do is plug in the telegraph cable, turn on the power switch, ping the exchange's transmission tower, and wait for an acknowledgment signal. If the tower doesn't reply "healthy and operational," attempting to catalogue or read incoming paper tape is useless. Our indexer's entry point and RPC client handshake is that initial power-on and telegraph ping.
+
+**Technical explanation:**
+> In Solana indexing, an indexer never executes transactions itself; it observes state transitions produced by validator nodes. To read state, the indexer must first establish a communication channel with an RPC node via HTTP JSON-RPC using `solana_client::rpc_client::RpcClient`. Before initiating expensive queries or running backfills, the binary performs an initial probe—invoking `RpcClient::get_version()` to query the software version running on the node or `RpcClient::get_health()` to ensure the node is healthy and caught up to cluster slot tolerance. In Rust, this begins with configuring dependencies (`solana-client` and `solana-sdk`) inside `Cargo.toml`, setting up a clean single-binary entry point in `src/main.rs`, rendering a startup banner to stdout, and establishing an initial synchronous RPC connection.
+```
+
+**Why:** Established domain-consistent ELI5 telegraph ticker analogy and technical explanation for cluster connection per Rule 8.
+</details>
+
+<details>
 <summary>2026-09-24 — Conversation.md — Create conversation & discussion log</summary>
 
 **Before:**

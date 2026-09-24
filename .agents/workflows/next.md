@@ -1,4 +1,4 @@
-﻿---
+---
 description: Advance the Solana Indexer curriculum one step (7-Day Sprint). Read ROADMAP, LEARNING, RULES, EXERCISES, SOLUTIONS first. Never silently edit ROADMAP/LEARNING. Skeleton exercises + tiered hints; solutions gated until attempt is made.
 ---
 
@@ -62,7 +62,7 @@ For the module you're teaching/continuing, include in order:
 7. **100% Roadmap-to-Code Enforcement** (Rule #18) — every concept in `ROADMAP.md` MUST be actively coded, compiled, tested in `src/`. Theory-only is strictly forbidden.
 8. **Decode-Correctness Discipline** (Rule #16) — when decoding account or instruction data, explicitly explain the exact byte layout, discriminator/index bytes, and verification against ground truth (block explorer / RPC).
 9. **Exercise, not finished answer** (Rules #7, #17) — learner writes code via skeleton with `todo!()` blocks. **MANDATORY:** Print the FULL exercise skeleton code block directly inside the chat reply so the learner doesn't have to open `EXERCISES.md`.
-10. **Line-by-line explanation** (Rule #11) of any code YOU show — every `&`, `*`, `mut`, `Option`, method call, `self`.
+10. **Intuitive Rust Teaching ("Why this & not that")** (Rule #11) — explain Rust mechanics in context, focusing on *why this type/method/pattern was chosen over alternatives*, keeping explanations punchy and high-signal to prevent cognitive fatigue.
 
 ## STEP 3.5 — Exercise Mode (skeleton → hints → attempt-gated solution)
 

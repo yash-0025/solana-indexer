@@ -38,7 +38,35 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
-*(Empty — your first exercise lands here once Day 1 starts.)*
+### Exercise 1.1 (Day 1) — Initializing RpcClient & Cluster Connectivity Handshake
+**Status:** open
+**Goal:** Verify toolchain, dependencies, and cluster connectivity by querying a live Solana RPC endpoint version.
+
+**Skeleton:**
+```rust
+use solana_client::rpc_client::RpcClient;
+
+fn main() {
+    println!("==================================================");
+    println!("          SOLANA INDEXER — PHASE 1 CLI            ");
+    println!("==================================================");
+
+    let rpc_url = "https://api.devnet.solana.com";
+    println!("[*] Connecting to RPC endpoint: {}", rpc_url);
+
+    // TODO(1): Instantiate a synchronous `RpcClient` using `RpcClient::new(rpc_url.to_string())`
+    // TODO(2): Call `.get_version()` on the client to fetch the remote node version
+    // TODO(3): Match on the Result:
+    //          - On Ok(v), print "[+] Connected! Node version: {}" with the `solana_core` field
+    //          - On Err(e), print "[-] Connection failed: {}" and call `std::process::exit(1)`
+    todo!()
+}
+```
+
+**Constraints:** Keep it synchronous (blocking `RpcClient`); do not use `async` or `tokio` yet.
+**Hints used:** 0/3
+**My attempt:** *(paste here when ready, even if broken/partial)*
+
 
 ---
 

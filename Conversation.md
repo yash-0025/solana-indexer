@@ -25,3 +25,14 @@
 - **Next Action**: Ready to kickoff Module 1.1 whenever you're ready!
 
 ---
+
+### 2026-09-24 — Learning Style Calibration: Fatigue-Free Rust Teaching ("Why this & not that")
+
+- **Topic**: Pedagogical calibration for Rust fundamentals.
+- **Context**: Learner is relatively new to Rust. Explaining every single tiny syntax token in overwhelming detail causes cognitive fatigue.
+- **Agreement & Calibration**:
+  - Teach Rust concepts organically alongside the indexer codebase.
+  - Focus primarily on **"Why this & why not that?"** (e.g. why `String` here and not `&str`? Why `match` instead of `if let`? Why reference borrowing vs moving ownership? What are the trade-offs?).
+  - Keep explanations crisp, intuitive, and high-signal, avoiding pedantic academic walls of text that make the learner tired.
+  - Updated `RULES.md` (Rule 11) and `.agents/workflows/next.md` to formally codify this approach.
+
