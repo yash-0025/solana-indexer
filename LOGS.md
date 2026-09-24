@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-09-24
+
+<details>
+<summary>2026-09-24 — Conversation.md — Create conversation & discussion log</summary>
+
+**Before:**
+*(file did not exist)*
+
+**After:**
+Created `Conversation.md` as a dedicated space for tracking chats, open questions, brainstorming, architectural debates, and discussion history across the Solana Indexer curriculum.
+
+**Why:** User requested a dedicated file to ask questions, chat, and keep running discussion history throughout the project.
+</details>
+
 ## 2026-09-22
 
 <details>
