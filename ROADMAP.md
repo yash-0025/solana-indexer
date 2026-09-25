@@ -1,4 +1,4 @@
-﻿# ⛓️ SOLANA INDEXER ROADMAP — Production-Grade Indexing Platform
+# ⛓️ SOLANA INDEXER ROADMAP — Production-Grade Indexing Platform
 
 > **Created:** 2026-09-22 · **Project:** solana-indexer · **Location:** wherever you scaffold it locally
 > **Learner profile:** Full-stack engineer, just completed a 30-day Rust Mastery Roadmap (ownership, borrowing, lifetimes, generics, traits, smart pointers, async/Tokio, Axum, sqlx, testing) via a trading-platform project. New to Solana specifically.
@@ -47,10 +47,10 @@ Every module has:
 ---
 
 ### Module 1.1 — Project Setup & Cargo Fundamentals
-- [ ] **You build:** The project skeleton. `cargo new solana-indexer`, `Cargo.toml`, `rust-toolchain.toml`, `.gitignore`, a `main.rs` that prints an indexer banner and connects to a configured RPC endpoint to confirm connectivity.
-- [ ] **Concepts:** `cargo new`/`cargo check`/`cargo run`/`cargo build --release` · `Cargo.toml` vs `Cargo.lock` · Edition 2024 · `rustfmt` + `clippy` from minute one · `rust-toolchain.toml` · `solana-client`/`solana-sdk` as first dependencies · Program entry point
-- [ ] **Architecture:** Single-binary architecture, same reasoning as the trading platform — evolve into a workspace later (Module 2.13), not now.
-- [ ] **Deliverable:** Project compiles, runs, and successfully calls `get_version` or `get_health` against a local validator. `cargo fmt --check` and `cargo clippy -- -D warnings` pass.
+- [x] **You build:** The project skeleton. `cargo new solana-indexer`, `Cargo.toml`, `rust-toolchain.toml`, `.gitignore`, a `main.rs` that prints an indexer banner and connects to a configured RPC endpoint to confirm connectivity.
+- [x] **Concepts:** `cargo new`/`cargo check`/`cargo run`/`cargo build --release` · `Cargo.toml` vs `Cargo.lock` · Edition 2024 · `rustfmt` + `clippy` from minute one · `rust-toolchain.toml` · `solana-client`/`solana-sdk` as first dependencies · Program entry point
+- [x] **Architecture:** Single-binary architecture, same reasoning as the trading platform — evolve into a workspace later (Module 2.13), not now.
+- [x] **Deliverable:** Project compiles, runs, and successfully calls `get_version` or `get_health` against a local validator. `cargo fmt --check` and `cargo clippy -- -D warnings` pass.
 
 ---
 

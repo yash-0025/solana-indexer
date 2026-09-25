@@ -7,6 +7,44 @@
 ## 2026-09-25
 
 <details>
+<summary>2026-09-25 — EXERCISES.md — Add Exercise 1.2 skeleton for AccountSnapshot</summary>
+
+**Before:**
+`## Open / In-Progress` was empty.
+
+**After:**
+Added Exercise 1.2 skeleton for defining `AccountSnapshot`, constructor, and lamports-to-SOL conversion method with unit test.
+
+**Why:** Hands-on exercise for Module 1.2 domain type modeling per Rule 17 and Step 3.5.
+</details>
+
+<details>
+<summary>2026-09-25 — EXAMPLES.md — Add ELI5 and technical explanation for Module 1.2</summary>
+
+**Before:**
+Module 1.1 was the latest concept.
+
+**After:**
+Added Module 1.2 ELI5 (Standardized Cataloguing Card) and technical explanation mapping to Solana's stateless program / account storage model.
+
+**Why:** Preserved domain-consistent ELI5 library cataloguing analogy and technical explanation per Rule 8.
+</details>
+
+<details>
+<summary>2026-09-25 — LEARNING.md & ROADMAP.md — Mark Module 1.1 complete and Day 1 in progress</summary>
+
+**Before:**
+`LEARNING.md`: Day 1 `[ ]`, Module 1.1 `[ ]`.
+`ROADMAP.md`: Module 1.1 items marked `[ ]`.
+
+**After:**
+`LEARNING.md`: Day 1 marked `[~]` (in progress), Module 1.1 marked `[x]` (completed).
+`ROADMAP.md`: Module 1.1 "You build", "Concepts", "Architecture", and "Deliverable" marked `[x]`.
+
+**Why:** Learner confirmed explicit approval to mark Module 1.1 complete after successfully compiling, running, and verifying cluster connectivity handshake.
+</details>
+
+<details>
 <summary>2026-09-25 — rust-toolchain.toml — Pin toolchain to stable</summary>
 
 **Before:**

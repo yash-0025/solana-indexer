@@ -27,3 +27,29 @@
 - `solana-sdk` - Defines fundamental on-chain primitives (Pubkey, Signature, Account , Instruction)
 - `1.18` - Standard compatible release series matching modern Solan mainnet/devnet nodes
 
+
+- In Solana , everything is an account . Solana smart contracts are 100% stateless. code accounts. All data (user balances, token mints, escrows vaults ) is stored in separate data accounts owned by those programs
+
+- Before our indexer can decode or query anything , we need strongly typed domain models represnting what the solana ledger actually delivers . 
+
+```
++--------------------------------------------------------------------+
+|                         Indexer Pipeline                           |
+|                                                                    |
+|  Solana RPC / WS                                                   |
+|        │ (Raw JSON-RPC / Bytes)                                    |
+|        ▼                                                           |
+|  [AccountSnapshot] ◄── Standardized Domain Envelope                |
+|    ├── pubkey: Pubkey                                              |
+|    ├── owner:  Pubkey                                              |
+|    ├── lamports: u64                                               |
+|    ├── data:   Vec<u8> ──► [Token / System Decoders in Module 1.7] |
+|    └── slot:   u64                                                 |
+|        │                                                           |
+|        ▼                                                           |
+|  In-Memory Storage / PostgreSQL / API                              |
++--------------------------------------------------------------------+
+
+```
+
+- By encapsulating on chain state into a generic `AccountSnapshot` our downstrema storage and indexing engines don't need to know which program created teh account 

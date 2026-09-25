@@ -1,4 +1,4 @@
-﻿# 📖 LEARNING.md — Living Progress Journal
+# 📖 LEARNING.md — Living Progress Journal
 
 > Source of truth for what's actually been learned, built, and understood. `ROADMAP.md` is the plan; this is the reality. Status markers: `[ ]` not started · `[~]` in progress · `[x]` done & understood · `[!]` done but shaky.
 >
@@ -10,7 +10,7 @@
 
 | Day | Target Modules | Status | Major Milestone |
 |:---|:---|:---:|:---|
-| **Day 1** | Modules 1.1 – 1.7 | [ ] | RPC & Decoding Foundations |
+| **Day 1** | Modules 1.1 – 1.7 | [~] | RPC & Decoding Foundations |
 | **Day 2** | Modules 1.8 – 1.15 | [ ] | Phase 1 Capstone: CLI Indexer |
 | **Day 3** | Modules 2.1 – 2.3 | [ ] | Async WebSocket Ingestion & Axum API |
 | **Day 4** | Modules 2.4 – 2.8 | [ ] | PostgreSQL Storage & Multi-Stage Pipeline |
@@ -22,7 +22,7 @@
 
 ## Phase 1 — Synchronous Foundations Through a Real CLI Indexer
 
-- [ ] 1.1 — Project Setup & Cargo Fundamentals
+- [x] 1.1 — Project Setup & Cargo Fundamentals
 - [ ] 1.2 — Domain Types: The Language of On-Chain Data
 - [ ] 1.3 — Configuration System
 - [ ] 1.4 — CLI Interface: The Indexer Terminal
