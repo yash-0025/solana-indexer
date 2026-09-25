@@ -22,3 +22,8 @@
 
 ```
 
+
+- `solana-client`  - The official Solana create providing client implementation RpcClient to make JSON-RPC calls over HTTP
+- `solana-sdk` - Defines fundamental on-chain primitives (Pubkey, Signature, Account , Instruction)
+- `1.18` - Standard compatible release series matching modern Solan mainnet/devnet nodes
+

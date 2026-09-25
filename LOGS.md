@@ -4,6 +4,67 @@
 
 ---
 
+## 2026-09-25
+
+<details>
+<summary>2026-09-25 — rust-toolchain.toml — Pin toolchain to stable</summary>
+
+**Before:**
+*(file did not exist)*
+
+**After:**
+Created `rust-toolchain.toml` with `channel = "stable"` per Module 1.1 deliverable.
+
+**Why:** Required skeleton configuration file specifying the active Rust toolchain channel.
+</details>
+
+<details>
+<summary>2026-09-25 — SOLUTIONS.md & SOLUTIONS_EXPLANATIONS.md — Add Solution 1.1 and deep explanation</summary>
+
+**Before:**
+`SOLUTIONS.md` empty. `SOLUTIONS_EXPLANATIONS.md` empty.
+
+**After:**
+Added Solution 1.1 reference implementation, "why this & why not that" rationale, comparison against learner's attempt, thought translation, and syntax breakdown.
+
+**Why:** Gated solution unlocked after learner successfully implemented and verified Exercise 1.1 per Rule 19 and Step 3.5.
+</details>
+
+<details>
+<summary>2026-09-25 — EXERCISES.md — Mark Exercise 1.1 solved</summary>
+
+**Before:**
+Exercise 1.1 was under `## Open / In-Progress` with `Status: attempted`.
+
+**After:**
+Moved Exercise 1.1 to `## Solved` with `Status: solved` and finalized attempt code.
+
+**Why:** Learner confirmed solution is working.
+</details>
+
+<details>
+<summary>2026-09-25 — EXERCISES.md — Record learner attempt for Exercise 1.1</summary>
+
+**Before:**
+```markdown
+### Exercise 1.1 (Day 1) — Initializing RpcClient & Cluster Connectivity Handshake
+**Status:** open
+...
+**My attempt:** *(paste here when ready, even if broken/partial)*
+```
+
+**After:**
+```markdown
+### Exercise 1.1 (Day 1) — Initializing RpcClient & Cluster Connectivity Handshake
+**Status:** attempted
+...
+**My attempt:**
+(Recorded learner's RpcClient handshake implementation)
+```
+
+**Why:** Learner submitted attempt for Exercise 1.1; marked status as attempted per Step 3.5.
+</details>
+
 ## 2026-09-24
 
 <details>
