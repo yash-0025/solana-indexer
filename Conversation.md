@@ -36,3 +36,20 @@
   - Keep explanations crisp, intuitive, and high-signal, avoiding pedantic academic walls of text that make the learner tired.
   - Updated `RULES.md` (Rule 11) and `.agents/workflows/next.md` to formally codify this approach.
 
+---
+
+### 2026-09-26 — Established Rust-Decisions.md
+
+- **Topic**: Tracking all Rust decisions and trade-offs.
+- **Action**: Created [Rust-Decisions.md](file:///c:/Dev/Rust-Projects/rust-indexer/Rust-Decisions.md) to log every Rust decision verbatim ("Why this & why not that") as they are taught, starting with Module 1.1 and Module 1.2.
+
+---
+
+### 2026-09-26 — Established Rule 23: Two-Step Module Transition Boundary
+
+- **Topic**: Workflow discipline at module boundaries.
+- **Learner Directive**: When a module is audited and approved for completion, mark everything complete in `LEARNING.md`, `ROADMAP.md`, and `LOGS.md`, present the clean milestone summary, and **stop**. Ask if the learner is ready to move to the next module. Never start teaching or dumping the next module in the same turn.
+- **Rule Codification**: Added Rule 23 to `RULES.md` and updated STEP 5 / STEP 8 of `.agents/workflows/next.md`.
+
+
+

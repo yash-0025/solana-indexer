@@ -4,6 +4,99 @@
 
 ---
 
+## 2026-09-26
+
+<details>
+<summary>2026-09-26 — RULES.md, next.md, Conversation.md — Establish Rule 23: Two-step module transition boundary</summary>
+
+**Before:**
+No formal separation rule preventing teaching the next module in the same response as marking the previous module complete.
+
+**After:**
+- Added Rule 23 to `RULES.md`: When a module is audited and approved for completion, update tracking files, report milestone, and stop. Explicitly ask if learner is ready for the next module. Never advance to teaching the next module in the same turn.
+- Updated `.agents/workflows/next.md` (STEP 5 and STEP 8) enforcing this two-step gate and adding it as an explicit anti-pattern.
+- Documented in `Conversation.md`.
+
+**Why:** User requested a strict rule that module completion and next module initiation are never bundled in the same turn.
+</details>
+
+<details>
+<summary>2026-09-26 — EXERCISES.md, EXAMPLES.md, Rust-Decisions.md — Add Exercise 1.2b, ELI5, and Rust Decisions</summary>
+
+**Before:**
+Module 1.2 was the latest entry across all files.
+
+**After:**
+- Added Exercise 1.2b (`TransactionRecord` struct, constructor, `Display` implementation, and unit test) to `EXERCISES.md`.
+- Added Module 1.2b ELI5 (Clearinghouse Transfer Slip) and technical explanation to `EXAMPLES.md`.
+- Added Module 1.2b Rust decisions (`Signature` vs `String`, `Option<i64>`, and `Display` vs `Debug`) to `Rust-Decisions.md`.
+
+**Why:** Advanced to second domain type (`TransactionRecord`) within Module 1.2 per roadmap specifications.
+</details>
+
+<details>
+<summary>2026-09-26 — SOLUTIONS.md & SOLUTIONS_EXPLANATIONS.md — Add Solution 1.2 and deep explanation</summary>
+
+**Before:**
+`SOLUTIONS.md` had Solution 1.1 only. `SOLUTIONS_EXPLANATIONS.md` had Solution 1.1 only.
+
+**After:**
+Added Solution 1.2 reference implementation, "why this & why not that" rationale, comparison against learner's attempt, thought translation, and syntax breakdown.
+
+**Why:** Gated solution unlocked after learner successfully implemented and verified Exercise 1.2 per Rule 19 and Step 3.5.
+</details>
+
+<details>
+<summary>2026-09-26 — EXERCISES.md — Mark Exercise 1.2 solved</summary>
+
+**Before:**
+Exercise 1.2 was under `## Open / In-Progress` with `Status: attempted`.
+
+**After:**
+Moved Exercise 1.2 to `## Solved` with `Status: solved` and finalized attempt code.
+
+**Why:** Learner confirmed tests pass and solution is working.
+</details>
+
+<details>
+<summary>2026-09-26 — Rust-Decisions.md — Add Decisions 5 and 6 (Semicolons & Method Calls)</summary>
+
+**Before:**
+Decisions 1 to 4 under Module 1.2.
+
+**After:**
+Added Decision 5 (Expression vs Statement / Omitting Semicolons) and Decision 6 (Method Call Parentheses `()` vs Field Access) under Module 1.2.
+
+**Why:** Documented Rust return syntax and method invocation mechanics encountered during Exercise 1.2 per Rule 11.
+</details>
+
+<details>
+<summary>2026-09-26 — EXERCISES.md — Record learner attempt for Exercise 1.2</summary>
+
+**Before:**
+Exercise 1.2 was marked `Status: open` with empty `My attempt:`.
+
+**After:**
+Marked Exercise 1.2 `Status: attempted` and recorded learner's `AccountSnapshot` struct, constructor, `sol_balance` method, and unit tests.
+
+**Why:** Learner submitted attempt for Exercise 1.2 per Step 3.5.
+</details>
+
+<details>
+<summary>2026-09-26 — Rust-Decisions.md, RULES.md, next.md, Conversation.md — Create Rust-Decisions.md and integrate into governance rules</summary>
+
+**Before:**
+`Rust-Decisions.md` did not exist. `RULES.md` and `next.md` did not track it as a required file.
+
+**After:**
+- Created `Rust-Decisions.md` containing all past and present "Why this & why not that" Rust syntax, architecture, and typing decisions verbatim (Modules 1.1 and 1.2).
+- Updated `RULES.md` (Rules 11 and 20) to enforce writing every generated Rust decision into `Rust-Decisions.md` without independent paraphrasing.
+- Updated `.agents/workflows/next.md` (Step 4) to include `Rust-Decisions.md` in file-edit discipline.
+- Added session record to `Conversation.md`.
+
+**Why:** User requested a dedicated file to track all Rust architectural and syntax decisions verbatim across the project.
+</details>
+
 ## 2026-09-25
 
 <details>

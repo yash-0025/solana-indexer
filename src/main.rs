@@ -1,5 +1,7 @@
 use solana_client::rpc_client::RpcClient;
 
+pub mod models;
+
 
 
 fn main() {

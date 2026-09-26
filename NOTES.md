@@ -53,3 +53,13 @@
 ```
 
 - By encapsulating on chain state into a generic `AccountSnapshot` our downstrema storage and indexing engines don't need to know which program created teh account 
+- Encapsulation means bundling data and the function that operates on that data together while restricting direct access to the internal details
+
+
+- On Solana blockchain , state is completely decoupled from executable code. Programs are stateless code accounts, mutable state lives entirely inside separate data accounts owned by those programs.
+- When an indexer queries an RPC node (eg: via getAccountInfo) or receives WebSocket streaming notifications, the cluster transmits account metadata alongside a raw byte buffer. 
+- BY separating generic account envelope metada from program-specific decoders, our downstream pipeline can store , sort and track accounts uniformly regardless of which program owns them
+
+#### Represent a single point-in-time snapshot of an on-chain account. Store its 32 byte address its owning proram its lamport balance , the raw byte vector and the block slot. Provide a clean constructor to instantiate it and a helper to calculate its human readable SOL balance (diving lamports by 1,000,000,000)
+
+

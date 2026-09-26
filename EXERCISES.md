@@ -38,8 +38,81 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
-### Exercise 1.2 (Day 1) — Modeling On-Chain State: AccountSnapshot
+### Exercise 1.2b (Day 1) — Transaction Receipts: TransactionRecord
 **Status:** open
+**Goal:** Define `TransactionRecord` domain struct with constructor, `Display` formatting, and unit tests.
+
+**Skeleton:**
+```rust
+use solana_sdk::signature::Signature;
+use std::fmt;
+
+/// Represents a confirmed transaction receipt on the Solana cluster.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TransactionRecord {
+    pub signature: Signature,
+    pub slot: u64,
+    pub block_time: Option<i64>,
+    pub success: bool,
+}
+
+impl TransactionRecord {
+    /// Creates a new `TransactionRecord`.
+    pub fn new(signature: Signature, slot: u64, block_time: Option<i64>, success: bool) -> Self {
+        // TODO(1): Construct and return `Self`
+        todo!()
+    }
+
+    /// Checks if the transaction execution succeeded.
+    pub fn is_success(&self) -> bool {
+        // TODO(2): Return `self.success` without a trailing semicolon
+        todo!()
+    }
+}
+
+impl fmt::Display for TransactionRecord {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let sig_str = self.signature.to_string();
+        let short_sig = if sig_str.len() > 16 {
+            format!("{}...{}", &sig_str[..8], &sig_str[sig_str.len() - 8..])
+        } else {
+            sig_str
+        };
+        let status = if self.success { "SUCCESS" } else { "FAILED" };
+        write!(f, "Tx {} @ slot {} [{}]", short_sig, self.slot, status)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_transaction_record_creation_and_display() {
+        let sig = Signature::new_unique();
+        let record = TransactionRecord::new(sig, 150, Some(1700000000), true);
+
+        assert_eq!(record.slot, 150);
+        assert_eq!(record.block_time, Some(1700000000));
+        assert!(record.is_success());
+
+        let display_output = format!("{}", record);
+        assert!(display_output.contains("SUCCESS"));
+        assert!(display_output.contains("slot 150"));
+    }
+}
+```
+
+**Constraints:** Maintain field types; implement `fmt::Display`.
+**Hints used:** 0/3
+**My attempt:** *(paste here when ready, even if broken/partial)*
+
+---
+
+## Solved
+
+### Exercise 1.2 (Day 1) — Modeling On-Chain State: AccountSnapshot
+**Status:** solved
 **Goal:** Define the core `AccountSnapshot` domain struct with constructor, helper methods, and unit tests.
 
 **Skeleton:**
@@ -89,11 +162,47 @@ mod tests {
 
 **Constraints:** Do not change field types; ensure constructor returns `Self`.
 **Hints used:** 0/3
-**My attempt:** *(paste here when ready, even if broken/partial)*
+**My attempt:**
+```rust
+use solana_sdk::pubkey::Pubkey;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct AccountSnapshot {
+    pub pubkey: Pubkey,
+    pub owner: Pubkey,
+    pub lamports: u64,
+    pub data: Vec<u8>,
+    pub slot: u64,
+}
+
+impl AccountSnapshot {
+    pub fn new(pubkey: Pubkey, owner: Pubkey, lamports: u64, data: Vec<u8>, slot: u64) -> Self {
+        Self { pubkey, owner, lamports, data, slot }
+    }
+
+    pub fn sol_balance(&self) -> f64 {
+        self.lamports as f64 / 1_000_000_000.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_account_snapshot_creation_and_sol_balance() {
+        let pubkey = Pubkey::new_unique();
+        let owner = Pubkey::new_unique();
+        let snapshot = AccountSnapshot::new(pubkey, owner, 2_500_000_000, vec![1, 2, 3], 100);
+
+        assert_eq!(snapshot.lamports, 2_500_000_000);
+        assert_eq!(snapshot.sol_balance(), 2.5);
+        assert_eq!(snapshot.data.len(), 3);
+    }
+}
+```
 
 ---
-
-## Solved
 
 ### Exercise 1.1 (Day 1) — Initializing RpcClient & Cluster Connectivity Handshake
 **Status:** solved
