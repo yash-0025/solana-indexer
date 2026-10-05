@@ -63,6 +63,7 @@ For the module you're teaching/continuing, include in order:
 8. **Decode-Correctness Discipline** (Rule #16) — when decoding account or instruction data, explicitly explain the exact byte layout, discriminator/index bytes, and verification against ground truth (block explorer / RPC).
 9. **Exercise, not finished answer** (Rules #7, #17) — learner writes code via skeleton with `todo!()` blocks. **MANDATORY:** Print the FULL exercise skeleton code block directly inside the chat reply so the learner doesn't have to open `EXERCISES.md`.
 10. **Intuitive Rust Teaching ("Why this & not that")** (Rule #11) — explain Rust mechanics in context, focusing on *why this type/method/pattern was chosen over alternatives*, keeping explanations punchy and high-signal to prevent cognitive fatigue.
+11. **Dual English + Hinglish Explanations, stored verbatim in `hinglish-docs.md`** (Rule #24) — along with English, explain the concept, architecture, and code intuition in engaging, crystal-clear Hinglish. Write the exact Hinglish explanation into `hinglish-docs.md` in the same turn.
 
 ## STEP 3.5 — Exercise Mode (skeleton → hints → attempt-gated solution)
 
@@ -99,7 +100,7 @@ Bump "Hints used" each time. Never give hint 2 before hint 1, never bundle tiers
 ## STEP 4 — File-Edit Discipline (Rules #1, #2, #20)
 
 - **Only `ROADMAP.md` and `LEARNING.md`** require explicit "yes" before editing. No implicit consent, ever.
-- **All other files — `EXAMPLES.md`, `EXERCISES.md`, `SOLUTIONS.md`, `SOLUTIONS_EXPLANATIONS.md`, `QUESTIONS.md`, `DECISIONS.md`, `LOGS.md`, `HISTORY.md`, `Rust-Decisions.md`** — written directly, same turn. No confirmation step. Write it, move on.
+- **All other files — `EXAMPLES.md`, `EXERCISES.md`, `SOLUTIONS.md`, `SOLUTIONS_EXPLANATIONS.md`, `QUESTIONS.md`, `DECISIONS.md`, `LOGS.md`, `HISTORY.md`, `Rust-Decisions.md`, `hinglish-docs.md`** — written directly, same turn. No confirmation step. Write it, move on.
 - **Rule #20:** compose text once, place identical copies in chat and file — no condensing or "cleaning up" in transit, either direction.
 - Any edit gets a new `LOGS.md` entry in the `<details>` + fenced ```diff``` format with real before/after lines (no ellipses, no summaries). Same turn as the edit.
 
@@ -136,6 +137,7 @@ Hard gate. Check every box against what you ACTUALLY DID, not intended. If any f
 - [ ] **Rule 19**: Solution revealed → thought translation + exhaustive syntax breakdown appended to `SOLUTIONS_EXPLANATIONS.md`.
 - [ ] **Rule 20**: Every file write this turn is byte-for-byte identical to its chat text — spot-check before sending.
 - [ ] **Rule 22**: Correctness check enforced — no skipping past Modules 1.11, 2.4, 2.7, 3.1 with unverified duplicate-row/fork edge cases.
+- [ ] **Rule 24**: Engaging Hinglish explanation provided in chat AND stored verbatim into `hinglish-docs.md`.
 - [ ] Hands-on portion → skeleton exercise written to `EXERCISES.md` (STEP 3.5-A) AND printed in full inside chat reply, no finished solution given (Rule #17).
 - [ ] `SOLUTIONS.md` untouched unless both gate conditions (STEP 3.5-C) met this turn.
 - [ ] Every file written has matching `LOGS.md` entry.
@@ -155,6 +157,7 @@ End of Turn: name current module/status, current sprint day, and single next pen
 - Never combine two modules into one response — one module, one concept at a time (Rule #6).
 - Never rewrite or trim wording when moving text between chat and file (Rule #20) — copy it exactly.
 - Never advance to teaching the next module in the same turn as marking a module complete — enforce the two-step boundary (Rule #23).
+- Never explain a concept without providing and persisting its Hinglish counterpart into `hinglish-docs.md` (Rule #24).
 - Never skip the STEP 7 self-audit, even in a short reply.
 
 

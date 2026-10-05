@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-10-04
+
+<details>
+<summary>2026-10-04 — RULES.md, next.md, hinglish-docs.md, Conversation.md — Establish Rule 24 and create hinglish-docs.md</summary>
+
+**Before:**
+- Explanations were required in technical English with domain ELI5 analogies, but lacked a requirement for fun, intuitive Hinglish explanations.
+- No central document existed to retain Hinglish conceptual walkthroughs and Rust intuition.
+
+**After:**
+- Added Rule 24 to `RULES.md` mandating dual English + Hinglish explanations for all concepts, architectures, exercises, and decisions, along with verbatim persistence into `hinglish-docs.md`.
+- Updated Rule 20 in `RULES.md` to track `hinglish-docs.md`.
+- Created `.agents/rules/hinglish-docs.md` to formalize the dual-explanation directive in workspace rules.
+- Updated `.agents/workflows/next.md` (STEP 3, STEP 4, STEP 7, STEP 8) ensuring future turns uphold Rule 24.
+- Created `hinglish-docs.md` retroactively capturing full Hinglish breakdowns for the Big Picture, Module 1.1 (Cluster Handshake & Wire Ticker), Module 1.2 (`AccountSnapshot` & Catalog Card), Module 1.2b (`TransactionRecord` & Clearinghouse Slip), and a consolidated Rust trade-off cheatsheet.
+- Added session record to `Conversation.md`.
+
+**Why:** User requested explanations in Hinglish alongside English to make technical concepts intuitive, relatable, and fun without cognitive fatigue, with all explanations stored permanently in `hinglish-docs.md`.
+</details>
+
 ## 2026-09-26
 
 <details>

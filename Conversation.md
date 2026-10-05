@@ -51,5 +51,22 @@
 - **Learner Directive**: When a module is audited and approved for completion, mark everything complete in `LEARNING.md`, `ROADMAP.md`, and `LOGS.md`, present the clean milestone summary, and **stop**. Ask if the learner is ready to move to the next module. Never start teaching or dumping the next module in the same turn.
 - **Rule Codification**: Added Rule 23 to `RULES.md` and updated STEP 5 / STEP 8 of `.agents/workflows/next.md`.
 
+---
+
+### 2026-10-04 — Established Rule 24: Dual English + Hinglish Explanations & `hinglish-docs.md`
+
+- **Topic**: Pedagogical calibration & permanent Hinglish documentation.
+- **Context**: Technical terms alone are dry, repetitive, and boring. Explaining concepts in engaging, relatable Hinglish alongside English makes learning fun, lively, and much easier to understand.
+- **Learner Directive**:
+  1. Add Rule 24: Whenever explaining concepts, architecture, or code, explain in English AND in crystal-clear, fun Hinglish.
+  2. Store the exact same Hinglish explanations in [hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/hinglish-docs.md) verbatim so the learner can revisit and refer to them anytime.
+  3. Retroactively generate and document all concepts covered so far (from Module 1.1 up to Module 1.2b) into `hinglish-docs.md`.
+- **Actions Completed**:
+  - Added Rule 24 to [RULES.md](file:///c:/Dev/Rust-Projects/rust-indexer/RULES.md) and updated Rule 20.
+  - Created workspace rule at [.agents/rules/hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/.agents/rules/hinglish-docs.md).
+  - Updated [.agents/workflows/next.md](file:///c:/Dev/Rust-Projects/rust-indexer/.agents/workflows/next.md) (STEP 3, 4, 7, 8).
+  - Created [hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/hinglish-docs.md) covering Module 1.1, 1.2, 1.2b, and core Rust decisions in depth.
+
+
 
 
