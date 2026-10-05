@@ -63,7 +63,7 @@ For the module you're teaching/continuing, include in order:
 8. **Decode-Correctness Discipline** (Rule #16) — when decoding account or instruction data, explicitly explain the exact byte layout, discriminator/index bytes, and verification against ground truth (block explorer / RPC).
 9. **Exercise, not finished answer** (Rules #7, #17) — learner writes code via skeleton with `todo!()` blocks. **MANDATORY:** Print the FULL exercise skeleton code block directly inside the chat reply so the learner doesn't have to open `EXERCISES.md`.
 10. **Intuitive Rust Teaching ("Why this & not that")** (Rule #11) — explain Rust mechanics in context, focusing on *why this type/method/pattern was chosen over alternatives*, keeping explanations punchy and high-signal to prevent cognitive fatigue.
-11. **Dual English + Hinglish Explanations, stored verbatim in `hinglish-docs.md`** (Rule #24) — along with English, explain the concept, architecture, and code intuition in engaging, crystal-clear Hinglish. Write the exact Hinglish explanation into `hinglish-docs.md` in the same turn.
+11. **Dual English + Hinglish Explanations, stored verbatim in `hinglish-docs.md`** (Rule #24) — along with English, explain the concept, architecture, and code intuition in engaging, crystal-clear Hinglish delivering a seamless blend of **deep technical knowledge + fun, relatable, lively delivery**. Weave core engineering mechanics directly with memorable intuition. Write the exact Hinglish explanation into `hinglish-docs.md` in the same turn.
 
 ## STEP 3.5 — Exercise Mode (skeleton → hints → attempt-gated solution)
 

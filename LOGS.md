@@ -4,6 +4,24 @@
 
 ---
 
+## 2026-10-05
+
+<details>
+<summary>2026-10-05 — hinglish-docs.md, RULES.md, next.md, Conversation.md — Calibrate Hinglish docs to Knowledgeable + Fun to Read blend</summary>
+
+**Before:**
+- Initial attempt stripped intuitive framing, creating dry, academic translations of technical terms into Hinglish without engaging flavor.
+- Rule 24 and workflows did not clearly articulate the blend between engineering rigor and lively intuition.
+
+**After:**
+- Refined Rule 24 in `RULES.md` and `.agents/rules/hinglish-docs.md` to mandate a seamless blend of **deep technical knowledge + engaging, fun, conversational delivery**.
+- Updated `.agents/workflows/next.md` (STEP 3 item 11).
+- Overhauled `hinglish-docs.md` uniting real technical architecture (Solana 400ms slots, PoH consensus, RPC rate limits, stateless programs vs data accounts, owner program permissions, memory layouts, lifetimes, precision division, cryptographic signatures, sentinel hazard) directly with lively, memorable intuition (bullet train, overworked RPC node, newsroom wire ticker, standardized catalog card, clearinghouse slip).
+- Logged session calibration in `Conversation.md`.
+
+**Why:** User requested a balance where technical depth and lively, fun-to-read intuition are seamlessly woven together, avoiding dry academic dumps while preserving deep learning value.
+</details>
+
 ## 2026-10-04
 
 <details>

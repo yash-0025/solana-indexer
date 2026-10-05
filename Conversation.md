@@ -67,6 +67,19 @@
   - Updated [.agents/workflows/next.md](file:///c:/Dev/Rust-Projects/rust-indexer/.agents/workflows/next.md) (STEP 3, 4, 7, 8).
   - Created [hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/hinglish-docs.md) covering Module 1.1, 1.2, 1.2b, and core Rust decisions in depth.
 
+---
+
+### 2026-10-05 — Calibration: Knowledgeable + Fun to Read Blend (The Ultimate Hinglish Style)
+
+- **Topic**: Blending technical systems depth with entertaining, relatable intuition in [hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/hinglish-docs.md).
+- **Learner Directive**: Do not make Hinglish docs feel like dry technical documentation translated into Hindi words, and do not make it pure storybook fluff either. We want a seamless blend: **high-signal technical knowledge (Solana runtime, 400ms slots, memory models, Rust trade-offs) woven directly together with fun, lively, relatable analogies and conversational intuition** (e.g. bullet train, overworked RPC node, standardized catalog card, clearinghouse slip).
+- **Actions Completed**:
+  - Updated Rule 24 in [RULES.md](file:///c:/Dev/Rust-Projects/rust-indexer/RULES.md) to formally mandate this "Knowledgeable + Fun to Read Blend".
+  - Updated [.agents/rules/hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/.agents/rules/hinglish-docs.md) and [.agents/workflows/next.md](file:///c:/Dev/Rust-Projects/rust-indexer/.agents/workflows/next.md).
+  - Rewrote [hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/hinglish-docs.md) uniting deep technicality with lively, engaging explanations for all modules and for future generations.
+
+
+
 
 
 

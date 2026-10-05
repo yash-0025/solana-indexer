@@ -1,50 +1,67 @@
 # 🇮🇳 Hinglish Docs — Solana Indexer (Rust)
 
-> **Kyun hai ye file?**  
-> Technical English terms padhke dimag garam aur boring ho jata hai! Is file me humne ab tak jo bhi architecture, code, Rust decisions aur Solana concepts seekhe hain, unhe ekdum mast, relatable aur crystal-clear **Hinglish** me likha hai.  
-> *Rule 24 ke mutabiq*: Har concept jo chat me explain hoga, uska exact Hinglish version yahan save hoga taaki tum kabhi bhi aake revise kar sako!
+> **Kyun hai ye file? (Knowledgeable + Fun to Read!)**  
+> Technical English padhte-padhte jab dimag dahi hone lage aur boring lage, tab ye file kholo! Yahan humne ab tak jo bhi architecture, Solana runtime mechanics, memory layouts aur Rust decisions seekhe hain, unhe ekdum mast **Knowledgeable + Fun** blend me likha hai.  
+> *Rule 24 ke mutabiq*: Na sirf boring technical translation, aur na hi hawa-hawaai baatein — yahan **solid engineering concepts** ko relatable analogies aur conversational Hinglish ke sath blend kiya gaya hai taaki tum aur aane wali generations isse padhkar maza bhi le sakein aur deep systems programming bhi master kar sakein! 🚀
 
 ---
 
 ## 🧭 Table of Contents
 1. [Big Picture: Solana Indexer Kya Hai Aur Kyun Bana Rahe Hain?](#1-big-picture-solana-indexer-kya-hai-aur-kyun-bana-rahe-hain)
-2. [Module 1.1 — Project Setup & Cluster Handshake (The Wire Ticker)](#2-module-11--project-setup--cluster-handshake-the-wire-ticker)
-3. [Module 1.2 — On-Chain State Modeling: `AccountSnapshot` (The Cataloguing Card)](#3-module-12--on-chain-state-modeling-accountsnapshot-the-cataloguing-card)
+2. [Module 1.1 — Project Setup & Cluster Handshake (The Wire Ticker Handshake)](#2-module-11--project-setup--cluster-handshake-the-wire-ticker-handshake)
+3. [Module 1.2 — Solana State Architecture & `AccountSnapshot` (The Standardized Catalog Card)](#3-module-12--solana-state-architecture--accountsnapshot-the-standardized-catalog-card)
 4. [Module 1.2b — Transaction Receipts & Signatures: `TransactionRecord` (The Clearinghouse Slip)](#4-module-12b--transaction-receipts--signatures-transactionrecord-the-clearinghouse-slip)
-5. [Rust Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#5-rust-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
+5. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#5-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
 
 ---
 
 ## 1. Big Picture: Solana Indexer Kya Hai Aur Kyun Bana Rahe Hain?
 
-### 🧐 Problem Kya Hai?
-Maan lo Solana ek super-fast bullet train hai jisme har second hazaron transactions ho rahi hain. Solana ke nodes (validators) ka primary kaam sirf ek hai: **transactions ko fast execute karna aur consensus banana**.
-Agar tum unse puchhoge:
-- *"Bhai, is wallet ne pichhle 6 mahine me kitni trades kiye?"*
-- *"Raydium pool me pichhle 1 ghante ka total volume kya tha?"*
+### 🧐 Problem Kya Hai (Validator vs RPC Query Limits)?
+Maan lo Solana ek super-fast bullet train hai jisme har 400ms me ek naya slot/block nikalta hai aur har second hazaron transactions fly karti hain.  
+Solana ke validator nodes ka ek hi primary mission hota hai: **transactions ko parallel execute karna (Sealevel runtime) aur Proof of History (PoH) consensus banana**. Unka focus live consensus par hai, purana hisaab-kitab sambhalne par nahi!
 
-Toh Solana RPC node bolega: *"Bhai maaf karo, mere paas itna time aur memory nahi hai ki purana hisaab-kitab baith ke filter karu!"* RPC nodes bohot jaldi rate-limit kar dete hain aur query karna bohot slow ho jata hai.
+Ab socho tum Solana ke RPC node ke paas jaakar poochhte ho:
+- *"Bhai, is wallet address ne pichhle 6 mahine me kitni trades kiye?"*
+- *"Raydium liquidity pool me pichhle 1 ghante ka total volume aur fees kitni thi?"*
 
-### 💡 Solution: The Indexer!
-Humara **Indexer** ek smart personal accountant (data pipeline) ki tarah hai:
-1. **Listen / Ingest:** Solana blockchain se har slot, account change aur transaction ko chupchap uthata hai.
-2. **Decode / Parse:** Raw bytes (0s and 1s) ko insano ke padhne layak structured format me decode karta hai.
-3. **Store:** Ek mast fast database (jaise Postgres / Redis) me save karta hai.
-4. **Serve:** Frontend ya API ko instant data provide karta hai (e.g., GraphQL ya REST API).
+Toh RPC node seedha haath khade kar dega aur bolega:  
+> *"Bhai maaf karo, mere paas itna time aur memory nahi hai ki 50 GB ka historical data baith ke filter karu!"*  
 
-Aur hum **Rust** isliye use kar rahe hain kyunki Rust memory-safe hai, bina garbage collector ke chalti hai, aur blazing fast performance deti hai jisse high-throughput Solana data pipeline choke na ho.
+RPC node key-value state store karta hai (e.g., *"Is account ka current balance kya hai"*). Wo relational queries, historical aggregations ya complex filters handle nahi kar sakta. Agar tum baar-baar aisi queries karoge, toh RPC node seedha **HTTP 429 Too Many Requests (Rate limit)** phek ke marega ya connection timeout ho jayega!
+
+### 💡 Solution: The Indexer Architecture (Humara Personal Accountant!)
+Is problem ko solve karne ke liye hum bana rahe hain **Solana Indexer**. Indexer ek smart data pipeline hai jo blockchain ke peeche khada hokar 4 stages chalata hai:
+1. **Listen / Ingest:** Solana blockchain se har naye slot, account update aur transaction ko chupchap stream karta hai (RPC polling, WebSockets, ya Yellowstone gRPC / Geyser plugin ke through).
+2. **Decode / Parse:** Blockchain se aane wale raw binary bytes (0s and 1s) ko Borsh / Anchor layouts ke hisaab se insano ke padhne layak strongly-typed Rust structs me convert karta hai.
+3. **Store:** Ek high-speed database (PostgreSQL / TimescaleDB / Redis) me structured tables aur indexes ke sath save karta hai.
+4. **Serve:** Frontend ya dApps ko ultra-fast GraphQL ya REST API provide karta hai jisse queries milliseconds me return ho sakein!
+
+### 🦀 Rust Kyun Use Kar Rahe Hain?
+1. **Zero Garbage Collector (GC) Pauses & Pure Speed:** Solana se data flood tsunami ki tarah aata hai. Agar Python ya Node.js use karenge, toh unka Garbage Collector beech-beech me pipeline ko rok dega aur buffer overflow ho jayega. Rust bina kisi GC ke pure native hardware speed deta hai.
+2. **Fearless Concurrency & Memory Safety:** Rust ka strict compiler compile-time pe ensure karta hai ki jab multiple threads simultaneously data decode aur save karein, toh na koi race condition ho aur na memory leak!
 
 ---
 
-## 2. Module 1.1 — Project Setup & Cluster Handshake (The Wire Ticker)
+## 2. Module 1.1 — Project Setup & Cluster Handshake (The Wire Ticker Handshake)
 
-### 📻 Asli Zindagi Ki Analogy: The Wire Ticker Handshake
-Socho tum ek financial newsroom me ek telegraph machine setup kar rahe ho stock exchange ki taaza khabrein sunne ke liye. News sunna shuru karne se pehle sabse pehla kaam kya hoga? Wire plug karna, power on karna, aur exchange tower ko ek ping bhejna: *"Bhai tower zinda hai? Signal aa raha hai?"*  
-Agar tower ne reply nahi diya, toh aage koi bhi report ya paper tape padhne ka koi fayda hi nahi hai.  
-Module 1.1 me humne wahi initial handshake banaya!
+### 📻 Intuition & Engineering Concept: The Wire Ticker Handshake
+Socho tum ek financial newsroom me live stock market ki taaza khabrein sunne ke liye ek telegraph wire machine lagate ho. News aana shuru ho aur tum paper tape padhna shuru karo, usse pehle sabse pehla kadam kya hoga?  
+Wire theek se plug karna, machine on karna, aur central exchange tower ko ek ping maarna:  
+> *"Bhai signal aa raha hai? Tower zinda hai aur operational hai?"*  
 
-### 🛠️ Humne Kya Banaya (`src/main.rs`)?
-Humne `solana-client` aur `solana-sdk` crates apne `Cargo.toml` me add kiye, aur Devnet cluster se connect karke check kiya ki node healthy hai ya nahi.
+Agar tower se reply hi nahi aaya ki wo healthy hai, toh desk par baithkar report file karne ka koi matlab hi nahi hai!  
+
+Humare indexer ke sath bhi exact yahi hota hai:
+- Indexer khud blockchain par transaction execute nahi karta; wo validator nodes ke state transitions ko **observe** karta hai.
+- State read karne ke liye humein RPC node ke sath ek synchronous HTTP JSON-RPC communication channel open karna padta hai via `solana_client::rpc_client::RpcClient`.
+- Lekin seedha expensive queries (jaise block history ya account backfill) chalane se pehle, binary ko **cluster handshake** perform karna padta hai:
+  1. **Node Health & Responsiveness:** RPC node alive hai aur requests accept kar raha hai ya nahi.
+  2. **Cluster Slot Sync:** Node cluster ke active tip se kitna peeche hai (slot lag tolerance). Agar node unsynced hai, toh wo stale data dega.
+  3. **Software Version Compatibility:** `RpcClient::get_version()` call karke confirm karte hain ki node ka `solana_core` semver version (e.g. `"1.18.25"`) compatible hai.
+
+### 🛠️ Code Walkthrough (`src/main.rs`)
+Humne `Cargo.toml` me `solana-client` aur `solana-sdk` crates add kiye, aur Devnet cluster se connect karke check kiya:
 
 ```rust
 use solana_client::rpc_client::RpcClient;
@@ -59,8 +76,10 @@ fn main() {
     let rpc_url = "https://api.devnet.solana.com";
     println!("[*] connecting to RPC endpoint: {}", rpc_url);
 
+    // Initializing the client with an owned String
     let rpc_client = RpcClient::new(rpc_url.to_string());
 
+    // Handshake check via get_version()
     match rpc_client.get_version() {
         Ok(v) => {
             println!("[+] Connected! Node version: {} ", v.solana_core);
@@ -73,43 +92,48 @@ fn main() {
 }
 ```
 
-### 🧠 Andar Ki Baat (Rust Decisions in Hinglish):
-1. **`rpc_url.to_string()` kyu kiya, seedha pass kyu nahi kiya?**
-   - `"https://api..."` ek borrowed string slice (`&str`) hai — matlab temporary pata.
-   - Lekin `RpcClient::new()` ko poori **ownership** chahiye hoti hai taaki wo URL ko apne paas lambe time tak sambhal kar rakh sake. Isliye humne `.to_string()` karke usko ek owned `String` bana ke diya.
-2. **`match` kyu use kiya, `.unwrap()` kyu nahi?**
-   - Network call hamesha `Result<T, E>` deti hai (ya toh chalega `Ok`, ya phutega `Err`).
-   - Agar `.unwrap()` karte aur internet chala jata, toh poora program **PANIC** (crash) ho jata! Production indexer me crash hona paap hai.
-   - Aur `if let Ok(...)` isliye nahi lagaya kyunki wo error ko chupchap daba deta hai. Hamein terminal pe error dekhna zaroori hai.
-3. **`std::process::exit(1)` kyu lagaya?**
-   - Agar connection hi nahi hua, toh aage badhne ka koi point nahi hai. Exit code `1` operating system (aur kal ko Docker) ko batata hai: *"Khatra! App boot hone me fail ho gaya."*
+### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
+1. **`rpc_url.to_string()` kyu kiya, `&str` seedha pass kyu nahi kiya?**
+   - `"https://api.devnet.solana.com"` ek borrowed string slice (`&str`) hai — matlab kisi stack ya binary memory ka temporary udhaar view.
+   - Lekin `RpcClient::new()` ko poori **ownership** chahiye hoti hai taaki wo URL ke bytes ko apne paas client ke poore lifetime tak sambhal sake.
+   - Agar client `&str` leta, toh Rust compiler `RpcClient<'a>` lifetime ka bhoot gale baandh deta! Phir client ko kisi struct ya async task me move karna bohot messy ho jata. Isliye `.to_string()` karke heap par owned `String` bana ke diya.
+2. **`match` kyu use kiya, `.unwrap()` aur `if let` kyu reject kiye?**
+   - Network call hamesha `Result<RpcVersionInfo, ClientError>` deti hai (ya toh `Ok` chalega ya `Err` phutega).
+   - **Why not `.unwrap()`:** Agar internet disconnect ho ya Devnet slow ho, toh `.unwrap()` poore indexer program ko panic (crash) kar dega! Production indexer me aise random crash hona paap hai.
+   - **Why not `if let Ok(...)`:** `if let` sirf khushi ke din (success) dekhta hai aur error ko bina bataye chupchap swallow kar leta hai. Startup handshake me error ka exact reason (DNS fail, 403 Forbidden, rate limit) terminal pe print hona mandatory hai. Isliye exhaustive `match` use kiya.
+3. **`std::process::exit(1)` on error:**
+   - Agar connection hi nahi bana, toh aage badhne ka koi point nahi hai. Exit code `1` operating system, terminal aur kal ko Docker/Kubernetes container orchestrators ko signal deta hai: *"Khatra! App fatal state me fail ho gaya"*, taaki unki restart policy alert trigger kar sake.
 
 ---
 
-## 3. Module 1.2 — On-Chain State Modeling: `AccountSnapshot` (The Cataloguing Card)
+## 3. Module 1.2 — Solana State Architecture & `AccountSnapshot` (The Standardized Catalog Card)
 
-### 📚 Asli Zindagi Ki Analogy: The Librarian's Cataloguing Card
-Socho ek grand library me purani kitabein aur taad-patra (manuscripts) aate hain. Librarian aate hi unhe kisi kone me nahi fenkta. Har manuscript ke liye ek standard **index card** banata hai:
-- Manuscript ka unique ID (Address).
+### 📚 Intuition & Engineering Concept: The Standardized Catalog Card
+Socho ek grand national library me roz hazaron purani kitabein aur taad-patra (manuscripts) aate hain. Librarian aate hi unhe kisi kone me nahi fenkta. Har manuscript ke liye ek standard **catalog index card** banata hai:
+- Manuscript ka unique catalog number (Address).
 - Kis department ka hai (Owner).
-- Iski keemat kitne sikke hai (Balance).
-- Andar ka raw parchment content (Data bytes).
+- Iski value kitni hai (Balance).
+- Andar ka raw parchment data (Byte array).
 - Kis tareekh ko record hua (Slot).
 
-Chahe andar ki bhasha abhi samajh na aayi ho, is standard card ki wajah se library unhe aasaani se rack me arrange aur track kar sakti hai.  
-Humare indexer me `AccountSnapshot` wahi standard catalog card hai!
+Ab chahe andar ka parchment kisi aisi anjani bhasha me likha ho jo abhi translate nahi hui, is standard card ki wajah se library unhe aasaani se rack me arrange, search aur track kar sakti hai!  
+Humare indexer me `AccountSnapshot` wahi standardized catalog card hai har on-chain account ke liye.
 
-### ⚡ Solana Ka Ek Golden Rule:
-Ethereum me smart contract ke andar hi code aur data mix hota hai. **Solana me aisa nahi hota!**  
-Solana me Programs **stateless** hote hain (sirf logic, no data). Sara data alag **Data Accounts** me store hota hai, jinke maalik (owners) wo programs hote hain.
+### ⚡ Solana Ka Sabse Bada Golden Rule: Code Aur Data 100% Alag Hain!
+Ethereum me smart contract ke andar hi code aur variables (storage trie) chipke rehte hain.  
+**Solana me aisa bilkul nahi hota:**
+1. **Programs 100% Stateless Hote Hain:** Solana me smart contracts ko "Programs" kehte hain aur wo `executable: true` accounts hote hain. Unke paas apna data store karne ka koi variable nahi hota.
+2. **State Lives in Data Accounts:** Saara balance, token state, user data alag **Data Accounts** me store hota hai.
+3. **The Owner Program Model:** Har account ka ek owner program (Pubkey) hota hai. Solana runtime ka strict rule hai: **Sirf owner program hi us account ke raw data bytes ko modify kar sakta hai aur lamports deduct kar sakta hai**. Koi doosra program un bytes ko chhu bhi nahi sakta!
 
-### 🛠️ Humne Kya Banaya (`src/models/account.rs`)?
-Humne `AccountSnapshot` struct define kiya aur uska unit test likha:
+### 🛠️ Code Walkthrough (`src/models/account.rs`)
+Jab indexer RPC (`getAccountInfo`) ya WebSocket stream se account fetch karta hai, toh cluster generic envelope metadata aur raw byte buffer transmit karta hai.  
+Downstream pipeline (decoders, database writers) ko ek uniform domain struct chahiye hota hai:
 
 ```rust
 use solana_sdk::pubkey::Pubkey;
 
-// Solana account ka ek specific slot par liya gaya state snapshot
+// Solana account ka specific slot par standardized state snapshot
 #[derive(Debug, Clone, PartialEq)]
 pub struct AccountSnapshot {
     pub pubkey: Pubkey,
@@ -128,46 +152,68 @@ impl AccountSnapshot {
         self.lamports as f64 / 1_000_000_000.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_account_snapshot_creation_and_sol_balance() {
+        let pubkey = Pubkey::new_unique();
+        let owner = Pubkey::new_unique();
+        let snapshot = AccountSnapshot::new(pubkey, owner, 2_500_000_000, vec![1, 2, 3], 100);
+
+        assert_eq!(snapshot.lamports, 2_500_000_000);
+        assert_eq!(snapshot.sol_balance(), 2.5);
+        assert_eq!(snapshot.data.len(), 3);
+    }
+}
 ```
 
-### 🧠 Andar Ki Baat (Rust Decisions in Hinglish):
+### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
 1. **`Pubkey` vs `String` — Address ke liye String kyu nahi liya?**
-   - Solana address Base58 string me 44 characters ka hota hai jo heap memory waste karta hai.
-   - `Pubkey` asal me 32 bytes ka fixed binary array (`[u8; 32]`) hai. Ye super-fast hai, copy ho jata hai (`Copy` trait), aur compile-time pe guarantee deta hai ki address valid hai.
-2. **`data: Vec<u8>` vs `&[u8]` — Slice kyu nahi use kiya?**
-   - `Vec<u8>` heap par owned buffer hota hai. Is snapshot ko hum kisi bhi background thread ya database channel me bhej sakte hain bina kisi lifetime (`'a`) ke jhanjhat ke.
+   - Solana address Base58 format me 44 characters ka string hota hai (e.g., `"4Nd1m..."`).
+   - `solana_sdk::pubkey::Pubkey` asal me 32 bytes ka fixed binary array (`[u8; 32]`) hai. Ye stack par rehta hai, `Copy` implement karta hai, aur zero heap allocation leta hai!
+   - Agar hum `String` use karte, toh har account ke liye heap par 44+ bytes allocate hoti, clone karne pe system slow hota, aur koi bhi typo ya invalid character ghus sakta tha.
+2. **`data: Vec<u8>` vs `&[u8]` — Slice kyu nahi liya?**
+   - `Vec<u8>` heap par ek owned buffer hota hai.
+   - Agar hum borrowed slice `&[u8]` use karte, toh snapshot temporary RPC network response buffer se bandh jata (lifetime `'a`).
+   - Owned `Vec<u8>` lene se snapshot ko cross-thread channels (jaise crossbeam ya tokio mpsc) ke through background decoding threads aur database workers me bina lifetime bandhan ke pass kiya ja sakta hai!
 3. **`Self` kya hai constructor me?**
-   - Rust me `impl AccountSnapshot` block ke andar `Self` likhna `AccountSnapshot` ka shortcut hai. Kal ko agar struct ka naam badal bhi diya, constructor ka signature nahi tootega.
-4. **`self.lamports as f64 / 1_000_000_000.0` — Float division ka funda:**
-   - 1 SOL = 1,000,000,000 Lamports hote hain (jaise 1 Rupee = 100 Paise).
-   - Rust me integer division decimals uda deta hai (`5 / 2 = 2` ho jata hai). Isliye pehle `as f64` (float) me convert kiya, fir divide kiya taaki `2.5 SOL` jaisa exact decimal balance mile!
-5. **Semicolon na lagane ka magic:**
-   - Rust me kisi block/function ki aakhri line me agar semicolon `;` na lagao, toh wo value automatically `return` ho jati hai. Rust developers isko neat aur idiomatic maante hain!
+   - Rust me `impl AccountSnapshot` block ke andar `Self` likhna `AccountSnapshot` ka automatic alias hai.
+   - Kal ko agar struct ka naam rename bhi kar diya, toh constructor signature tootega nahi. Idiomatic Rust!
+4. **`self.lamports as f64 / 1_000_000_000.0` (Division Precision Trap):**
+   - Solana par native currency ki base unit **Lamport** hoti hai ($1\text{ SOL} = 1,000,000,000\text{ Lamports}$).
+   - Rust strongly-typed hai: integer division (`u64 / u64`) decimal remainder ko discard kar deta hai (`2_500_000_000 / 1_000_000_000 = 2` ho jayega, aur `0.5` SOL hawa me gayab!).
+   - Isliye hum pehle `self.lamports as f64` (float) me cast karte hain, aur float `1_000_000_000.0` se divide karte hain taaki `2.5` SOL jaisa exact fractional balance mile.
+5. **Semicolon na lagane ka magic (Expression vs Statement):**
+   - Rust me kisi block ya function ki aakhri line me agar semicolon `;` na lagao, toh wo value automatically function ka return value ban jati hai. Semicolon lagane par wo statement ban jati hai jo unit type `()` return karti hai.
 6. **Method call me `()` lagana:**
-   - Rust me `snapshot.sol_balance()` likhna padta hai brackets ke sath. Agar `()` bhool gaye, toh compiler use field samjhega aur gusse me error de dega.
+   - Rust me `snapshot.sol_balance()` likhte waqt `()` lagana mandatory hai. Agar brackets bhool gaye, toh compiler use struct field samajh kar gusse me error phekega.
 
 ---
 
-## 5. Module 1.2b — Transaction Receipts & Signatures: `TransactionRecord` (The Clearinghouse Slip)
+## 4. Module 1.2b — Transaction Receipts & Signatures: `TransactionRecord` (The Clearinghouse Slip)
 
-### 🏦 Asli Zindagi Ki Analogy: The Clearinghouse Wire Slip
-Socho bank me do cheezein hoti hain:
-1. Tumhara account balance (ye ho gaya `AccountSnapshot`).
-2. Do accounts ke beech jo paisa transfer hua, uski bank receipt ya transaction slip.
+### 🏦 Intuition & Engineering Concept: The Bank Clearinghouse Wire Slip
+Socho bank me do alag-alag cheezein maintain hoti hain:
+1. **Account State:** Customer ka account balance aur profile (ye ho gaya `AccountSnapshot` — *ab is waqt state kya hai*).
+2. **Transaction Receipts:** Do accounts ke beech jo wire transfer hua, uski immutable bank receipt ya transfer slip (ye ho gaya `TransactionRecord` — *kya event hua jisse state change hui*).
 
-Bank ka auditor har transfer ke liye ek slip file karta hai:
-- Tracking number / UTR number (Signature).
-- Cycle number (Slot).
-- Ghadi ka time agar available ho (Timestamp).
-- Pass hua ya Fail (Success status).
+Bank ka auditor har transaction ke liye ek standardized slip file karta hai:
+- Official tracking number / UTR number (Signature stamp).
+- Clearing cycle number (Slot).
+- Ghadi ka timestamp agar synchronize tha (Block time).
+- Transaction pass hua ya fail (Success status).
 
-Receipt se ye pakka ho jata hai ki event sach me network pe hua tha! Humare indexer me `TransactionRecord` wahi official clearinghouse slip hai.
+Receipt se ye pakka ho jata hai ki event sach me network par hua tha! Humare indexer me `TransactionRecord` wahi official clearinghouse slip hai jo audit trail, live activity feeds aur trading volume calculate karne ke kaam aati hai.
 
-### 🛠️ Architecture & Data Model:
+### 🛠️ Architecture & Data Model (`TransactionRecord`)
 ```rust
 use solana_sdk::signature::Signature;
 use std::fmt;
 
+/// Represents a confirmed transaction receipt on the Solana cluster.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TransactionRecord {
     pub signature: Signature,
@@ -177,30 +223,32 @@ pub struct TransactionRecord {
 }
 ```
 
-### 🧠 Andar Ki Baat (Rust Decisions in Hinglish):
-1. **`Signature` vs `String`:**
-   - Transaction signature Base58 string me 88+ characters ka hota hai.
-   - `Signature` asal me 64 bytes ka cryptographic array (`[u8; 64]`) hai. Zero heap allocation, compile-time validity check, aur copyable!
-2. **`Option<i64>` for `block_time` — Seedha number kyu nahi rakha?**
-   - Solana me block time koi atomic physical clock nahi hoti; validator votes se estimate ki jati hai. Kabhi kabhi kisi slot ke liye timestamp `None` ho sakta hai.
-   - Agar hum default me `0` ya `-1` store karte, toh date ban jati `Jan 1, 1970` (Unix epoch), jisse database me galat graph ban jaate. Rust ka `Option` hamein sach bolne par majboor karta hai (`Some(timestamp)` ya `None`).
+### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
+1. **`signature: Signature` vs `String`:**
+   - Solana par transaction signature 64 bytes ki cryptographic Ed25519 signature hoti hai.
+   - `solana_sdk::signature::Signature` type `[u8; 64]` wrap karta hai, `Copy` implement karta hai, stack par rehta hai, aur zero heap allocation leta hai. Base58 string 88+ bytes heap memory waste karti hai.
+2. **`Option<i64>` for `block_time` (The Sentinel Bug Hazard):**
+   - Solana par block time koi atomic physical hardware clock nahi hoti; validator node votes se approximate Unix timestamp estimate hota hai.
+   - Agar koi slot skip ho jaye ya consensus me delay ho, toh us specific slot ke liye `block_time` absent (`None`) ho sakta hai.
+   - **Why not sentinel value like `0` or `-1`:** Agar hum default `0` daal dete, toh database use `Jan 1, 1970 00:00:00 UTC` interpret kar lega, jisse analytics dashboards aur daily charts completely corrupt ho jayenge! Rust ka `Option<i64>` explicit presence (`Some(ts)`) ya absence (`None`) enforce karta hai.
 3. **`Display` vs `Debug` trait:**
-   - `Display` (`println!("{}", tx)`): Insano ke padhne ke liye terminal pe sundar output (jaise lamba 88-char signature ko chhota karke `5K2...9pQ` aur `[SUCCESS]` badge dikhana).
-   - `Debug` (`println!("{:?}", tx)`): Internal raw dump developers aur logs ke liye.
+   - `Display` (`println!("{}", tx)`): Insano ke padhne ke liye terminal pe sundar output (jaise lamba 88-char signature ko chhota karke `5K2...9pQ` aur status badge dikhana).
+   - `Debug` (`println!("{:?}", tx)`): Internal raw dump developers aur structured logs ke liye.
 
 ---
 
-## 5. Rust Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
+## 5. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
 
-| Rust Construct | Humne Kya Use Kiya | Kya Reject Kiya Aur Kyun? |
+| Component | Humne Kya Use Kiya | Kya Reject Kiya Aur Kyun? (Technical Trade-off) |
 | :--- | :--- | :--- |
-| **Solana Address** | `Pubkey` (32 bytes stack) | `String` (44+ bytes heap, slow allocation, invalid char risk) |
-| **Tx Hash** | `Signature` (64 bytes stack) | `String` (88+ bytes heap, memory overhead) |
-| **Error Handling** | `match Result` | `.unwrap()` (crashes service), `if let` (silent error ignore) |
-| **Account Data** | `Vec<u8>` (owned buffer) | `&[u8]` (borrowed lifetime `'a` locks snapshot to temp buffer) |
-| **Nullable Timestamp** | `Option<i64>` (`Some`/`None`) | Sentinel `0` or `-1` (corrupts history with Jan 1970 dates) |
-| **Balance Calculation**| Float cast `as f64 / 1e9` | Integer division `u64 / 1e9` (loses decimal fractions) |
-| **Struct Self Reference**| `Self { ... }` | `AccountSnapshot { ... }` (boilerplate, breaks on rename) |
+| **Address Representation** | `Pubkey` (`[u8; 32]` stack) | `String` (44+ bytes heap allocation, clone overhead, invalid chars risk) |
+| **Tx Identifier** | `Signature` (`[u8; 64]` stack) | `String` (88+ bytes heap, slow comparisons, no cryptographic type safety) |
+| **Network Error Handling** | `match Result<T, E>` | `.unwrap()` (panics and crashes service), `if let` (swallows startup errors) |
+| **Account Raw Data** | `Vec<u8>` (owned heap buffer) | `&[u8]` (borrowed lifetime `'a` locks struct to short-lived RPC response) |
+| **Ledger Timestamp** | `Option<i64>` (`Some`/`None`) | Sentinel `0` / `-1` (pollutes downstream DB with fake 1970 epoch dates) |
+| **Lamport to SOL Math** | `self.lamports as f64 / 1e9` | `u64 / 1e9` (integer truncation drops fractional decimals like `0.5` SOL) |
+| **Constructor Type Alias**| `Self` | Concrete Struct Name (boilerplate, breaks if struct is renamed) |
+| **Process Failure Exit** | `std::process::exit(1)` | Normal return `()` (leaves orchestrator unaware of startup failure) |
 
 ---
-*Ye file lagataar update hoti rahegi jaise jaise hum aage ke modules aur advanced indexer pipeline banayenge!* 🚀
+*Ye file lagataar update hoti rahegi jaise jaise hum aage ke modules aur advanced multi-stage pipeline banayenge!* 🚀
