@@ -78,6 +78,18 @@
   - Updated [.agents/rules/hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/.agents/rules/hinglish-docs.md) and [.agents/workflows/next.md](file:///c:/Dev/Rust-Projects/rust-indexer/.agents/workflows/next.md).
   - Rewrote [hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/hinglish-docs.md) uniting deep technicality with lively, engaging explanations for all modules and for future generations.
 
+---
+
+### 2026-10-07 — Exercise 1.2b Solved & Module 1.2 In-Progress Alignment
+
+- **Topic**: Completion of Exercise 1.2b (`TransactionRecord`) and workflow alignment.
+- **Milestone Update**:
+  - Learner successfully coded, verified, and tested `TransactionRecord` in [src/models/transaction.rs](file:///c:/Dev/Rust-Projects/rust-indexer/src/models/transaction.rs).
+  - Exercise 1.2b marked `Status: solved` in [EXERCISES.md](file:///c:/Dev/Rust-Projects/rust-indexer/EXERCISES.md). Reference implementation and syntax breakdown recorded in [SOLUTIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS.md) and [SOLUTIONS_EXPLANATIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS_EXPLANATIONS.md).
+  - With learner's explicit approval, updated [LEARNING.md](file:///c:/Dev/Rust-Projects/rust-indexer/LEARNING.md) line 26 from `[ ]` to `[~]` for Module 1.2.
+- **Next Action**: Ready to advance to the next step via `/next` (covering remaining domain models: `DecodedInstruction` and `SlotInfo`).
+
+
 
 
 

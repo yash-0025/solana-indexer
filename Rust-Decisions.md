@@ -59,6 +59,6 @@
 - **Why `Display`**: Formats the transaction into user-friendly CLI output (e.g., truncating the 88-char signature into `abc...xyz` with status badge) when printed with `{}`.
 - **Why `Debug`**: Intended for developers and internal tracing/logging with `{:?}`, dumping full raw field data.
 
----
+
 
 

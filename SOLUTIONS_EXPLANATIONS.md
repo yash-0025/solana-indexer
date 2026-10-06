@@ -30,3 +30,17 @@
 - `pub fn sol_balance(&self) -> f64`: Borrows `&self` immutably.
 - `self.lamports as f64 / 1_000_000_000.0`: Omitting the trailing semicolon makes this expression the implicit return value of the function. Casting `as f64` ensures floating-point division rather than integer division.
 
+---
+
+### Solution 1.2b — Transaction Receipts & Signatures: TransactionRecord
+
+**Plain English Thought Translation:**
+> "Track a confirmed transaction receipt on the ledger. Record its unique 64-byte cryptographic signature, the slot in which it was confirmed, the approximate wall-clock block time (if available), and whether execution completed successfully. Provide a constructor, a quick success query helper, and format it cleanly for terminal output with truncated signatures."
+
+**Syntax & Decision Breakdown:**
+- `pub signature: Signature`: Cryptographic Ed25519 signature type from `solana-sdk`. Wraps `[u8; 64]`, implements `Copy`, and avoids heap allocation.
+- `pub block_time: Option<i64>`: `Option` expresses nullable values idiomatically in Rust. `i64` matches Unix epoch seconds. `None` safely models missing timestamp estimates without sentinel value hazards.
+- `pub fn is_success(&self) -> bool { self.success }`: Immutably borrows `&self` and evaluates `self.success` as the return expression without a trailing semicolon.
+- `impl fmt::Display for TransactionRecord`: Implements formatting for `{}`. Slices `&sig_str[..8]` and `&sig_str[sig_str.len() - 8..]` safely because Base58 characters are 1-byte ASCII tokens.
+
+

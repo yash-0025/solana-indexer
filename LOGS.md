@@ -4,6 +4,54 @@
 
 ---
 
+## 2026-10-07
+
+<details>
+<summary>2026-10-07 — SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md — Record Solution 1.2b and mark Exercise 1.2b solved</summary>
+
+**Before:**
+- Exercise 1.2b was in `## Open / In-Progress` with `Status: open`.
+- `SOLUTIONS.md` and `SOLUTIONS_EXPLANATIONS.md` had entries up to Solution 1.2.
+
+**After:**
+- Moved Exercise 1.2b to `## Solved` with `Status: solved` and recorded learner's working attempt in `EXERCISES.md`.
+- Added Solution 1.2b reference implementation, rationale, and comparison to `SOLUTIONS.md`.
+- Added Solution 1.2b thought translation and syntax breakdown to `SOLUTIONS_EXPLANATIONS.md`.
+
+**Why:** Exercise 1.2b was successfully completed, verified, and gated solution unlocked per Rule 19 and Step 3.5.
+</details>
+
+<details>
+<summary>2026-10-07 — EXERCISES.md, EXAMPLES.md, Rust-Decisions.md, hinglish-docs.md — Revert premature Exercise 1.2c additions</summary>
+
+**Before:**
+Prematurely injected Exercise 1.2c across working files without learner confirmation or module audit.
+
+**After:**
+Reverted Exercise 1.2c additions from `EXERCISES.md`, `EXAMPLES.md`, `Rust-Decisions.md`, and `hinglish-docs.md`. Kept `## Open / In-Progress` clear awaiting explicit module review and learner consent.
+
+**Why:** Uphold Rule 1, Rule 23, and workflow discipline: require explicit learner alignment, permission, and module audit before generating new exercises.
+</details>
+
+<details>
+<summary>2026-10-07 — LEARNING.md, Conversation.md — Mark Module 1.2 in-progress [~] and document milestone</summary>
+
+**Before:**
+`LEARNING.md` line 26:
+```markdown
+- [ ] 1.2 — Domain Types: The Language of On-Chain Data
+```
+
+**After:**
+`LEARNING.md` line 26:
+```markdown
+- [~] 1.2 — Domain Types: The Language of On-Chain Data
+```
+Appended milestone and alignment session log to `Conversation.md`.
+
+**Why:** Learner explicitly authorized status update to reflect verified completion of `AccountSnapshot` (Exercise 1.2) and `TransactionRecord` (Exercise 1.2b) per Rule 1, Rule 2, and Rule 5.
+</details>
+
 ## 2026-10-05
 
 <details>

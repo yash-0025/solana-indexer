@@ -131,4 +131,83 @@ mod tests {
 **Compared to your attempt:**
 - **Matches:** Correct struct fields, derives (`Debug, Clone, PartialEq`), constructor shorthand field syntax `Self { pubkey, owner, lamports, data, slot }`, correct float division, and passing unit test.
 - **Difference:** Your updated implementation matches the reference perfectly.
+
+---
+
+### Solution 1.2b — Transaction Receipts & Signatures: TransactionRecord
+
+**Reference implementation:**
+```rust
+use solana_sdk::signature::Signature;
+use std::fmt;
+
+/// Represents a confirmed transaction receipt on the Solana cluster.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TransactionRecord {
+    pub signature: Signature,
+    pub slot: u64,
+    pub block_time: Option<i64>,
+    pub success: bool,
+}
+
+impl TransactionRecord {
+    /// Creates a new `TransactionRecord`.
+    pub fn new(signature: Signature, slot: u64, block_time: Option<i64>, success: bool) -> Self {
+        Self {
+            signature,
+            slot,
+            block_time,
+            success,
+        }
+    }
+
+    /// Checks if the transaction execution succeeded.
+    pub fn is_success(&self) -> bool {
+        self.success
+    }
+}
+
+impl fmt::Display for TransactionRecord {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let sig_str = self.signature.to_string();
+        let short_sig = if sig_str.len() > 16 {
+            format!("{}...{}", &sig_str[..8], &sig_str[sig_str.len() - 8..])
+        } else {
+            sig_str
+        };
+        let status = if self.success { "SUCCESS" } else { "FAILED" };
+        write!(f, "Tx {} @ slot {} [{}]", short_sig, self.slot, status)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_transaction_record_creation_and_display() {
+        let sig = Signature::new_unique();
+        let record = TransactionRecord::new(sig, 150, Some(1700000000), true);
+
+        assert_eq!(record.slot, 150);
+        assert_eq!(record.block_time, Some(1700000000));
+        assert!(record.is_success());
+
+        let display_output = format!("{}", record);
+        assert!(display_output.contains("SUCCESS"));
+        assert!(display_output.contains("slot 150"));
+    }
+}
+```
+
+**Why this & why not that:**
+- `Signature` vs `String`: 64-byte cryptographic type wrapping `[u8; 64]`; resides on the stack, copyable, zero heap allocations, compile-time signature validity.
+- `Option<i64>` vs sentinel `0` / `-1`: Explicitly denotes presence (`Some(ts)`) or absence (`None`) of approximate ledger timestamps without polluting databases with fake 1970 Unix epoch dates.
+- `self.success`: Returning without a trailing semicolon yields the boolean value cleanly as an expression.
+- `Display` vs `Debug`: Formats 88-char base58 signatures cleanly into `abc...xyz` with status badges for human CLI output, leaving `Debug` for developer inspection.
+
+**Compared to your attempt:**
+- **Matches:** Struct definition, constructor `Self { signature, slot, block_time, success }`, `is_success()` returning `self.success` without a semicolon, `Display` implementation with truncated signature format, and passing unit test.
+- **Difference:** None! Your implementation matches the reference perfectly.
+
 

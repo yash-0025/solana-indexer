@@ -44,4 +44,7 @@
 **Technical explanation:**
 > On Solana, state updates are executed via transactions. Each transaction is signed by one or more private keys, producing a primary 64-byte Ed25519 signature (`solana_sdk::signature::Signature`) that uniquely identifies the transaction across the entire cluster. When the cluster confirms a block, validators record the ledger slot number (`slot: u64`), an estimated Unix timestamp (`block_time: Option<i64>`), and whether execution succeeded without runtime error (`success: bool`). In an indexer, transactions must be tracked as first-class domain entities (`TransactionRecord`) independently of individual account updates. Modeling `block_time` as `Option<i64>` reflects the on-chain reality that timestamps are approximate cluster estimates and can occasionally be `None`. Implementing `std::fmt::Display` provides human-friendly terminal formatting (shortening the 64-byte signature to `abc...xyz`), while `#[derive(Debug)]` remains available for internal logging.
 
+
+
+
 
