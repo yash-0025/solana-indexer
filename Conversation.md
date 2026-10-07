@@ -89,6 +89,22 @@
   - With learner's explicit approval, updated [LEARNING.md](file:///c:/Dev/Rust-Projects/rust-indexer/LEARNING.md) line 26 from `[ ]` to `[~]` for Module 1.2.
 - **Next Action**: Ready to advance to the next step via `/next` (covering remaining domain models: `DecodedInstruction` and `SlotInfo`).
 
+---
+
+### 2026-10-07 — Exercise 1.3 Solved & Workflow Gate Enforcement
+
+- **Topic**: Exercise 1.3 (`IndexerConfig`) completion, Module 1.3b progression, and strict approval gate enforcement.
+- **Milestone Update**:
+  - Learner successfully implemented `IndexerConfig`, `Default` trait, and constructors in [src/config.rs](file:///c:/Dev/Rust-Projects/rust-indexer/src/config.rs), with passing unit tests.
+  - Solution 1.3 recorded in [SOLUTIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS.md) and [SOLUTIONS_EXPLANATIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS_EXPLANATIONS.md).
+  - Social journey content generated in [social.md](file:///c:/Dev/Rust-Projects/rust-indexer/social.md) for both Exercise 1.3 and 1.3b with independent topics and <=280 char limits.
+- **Workflow Calibration**:
+  - **Strict Gate Enforcement**: The AI must NEVER modify workspace files or advance into new exercises without presenting the proposed changes and waiting for the learner's explicit approval first.
+  - Social media content generation in `social.md` is mandatory for every single exercise/milestone without exception.
+  - Prompts and logs must be systematically updated with each workflow step.
+- **Next Action**: Awaiting learner approval and review of Exercise 1.3b skeleton before hands-on implementation.
+
+
 
 
 

@@ -89,6 +89,42 @@
 #### 3. `self.slot.0 == self.parent_slot.0 + 1` (Consecutive Parent Check)
 - **Why `.0` field access**: Tuple struct fields are indexed positionally starting at `0`. Accessing `.0` directly unpacks the inner `u64` for arithmetic comparison without requiring boilerplate getter methods.
 
+---
+
+### Module 1.3 — Configuration System: IndexerConfig & Ownership
+
+#### 1. `String` vs `&str` for Config Fields
+- **Why `String`**: The configuration struct is loaded once during binary initialization and then passed across threads, channels, and client constructors throughout the indexer's entire execution lifetime. Storing owned `String` fields decouples the struct from the short-lived I/O buffer that read the configuration file, eliminating lifetime parameters (`'a`) across all downstream structs.
+- **Why not `&str`**: A borrowed string slice `&str` requires a lifetime parameter (e.g., `IndexerConfig<'a>`). That lifetime would viral-spread through every subsystem that holds a reference to the config, preventing the struct from being moved freely into asynchronous tasks or background worker threads.
+
+#### 2. `Default` Trait Implementation for Sane Fallbacks
+- **Why `Default` trait**: Implementing `Default` provides standard, predictable defaults (e.g. devnet RPC endpoint, "confirmed" commitment, 1000ms polling interval). It enables ergonomic instantiation via `IndexerConfig::default()` and allows fallback resolution using `Option::unwrap_or_else`.
+- **Why not explicit standalone constructor only**: Without `Default`, every instantiation must manually populate every single parameter, making test setups and partial overrides verbose and brittle.
+
+#### 3. `Option<T>` for Environment Overrides (`unwrap_or`)
+- **Why `Option<T>` with `unwrap_or`**: When inspecting `std::env::var("SOLANA_INDEXER_RPC_URL")`, the environment variable may or may not exist. Rust represents optional values via `Option<T>`. Using `.unwrap_or(default_value)` provides clean, crash-safe fallback mechanics without `unwrap()` panics.
+- **Why not `.unwrap()`**: Calling `.unwrap()` crashes the process if the environment variable is not defined. In a config system, optional overrides must fail silently and gracefully fall back to configuration files or default constants.
+
+---
+
+### Module 1.3b — 3-Tier Precedence Configuration Loading & TOML Parsing
+
+#### 1. Intermediate Schema `ConfigFile` with `Option<T>` Fields vs Deserializing Directly into `IndexerConfig`
+- **Why `Option<T>` fields**: A configuration file might only specify a subset of settings (for instance, just overriding `rpc_url = "http://127.0.0.1:8899"`). Wrapping all fields in `Option<T>` allows `toml::from_str` to deserialize partial files without schema validation errors, smoothly merging present values onto `IndexerConfig::default()`.
+- **Why not deserialize directly into `IndexerConfig`**: If `IndexerConfig` were deserialized directly without `Option`, TOML parsing would immediately fail if any single key were omitted from the file.
+
+#### 2. `std::fs::read_to_string` vs Stream Buffers (`BufReader`)
+- **Why `std::fs::read_to_string`**: Configuration files are tiny (<4 KB) and read exactly once at startup. Reading the entire file into an owned `String` in one shot is simple, atomic, and avoids the cognitive and syntactic overhead of buffered reader streams.
+- **Why not `BufReader`**: Streaming readers add unnecessary complexity when the entire payload easily fits into a single memory page.
+
+#### 3. `std::env::var().ok()` vs `.unwrap()`
+- **Why `.ok()`**: Environment variable queries return `Result<String, VarError>`. Calling `.ok()` converts the `Result` into `Option<String>`, discarding the error when the variable is unset. This allows clean `if let Ok(val) = std::env::var("...")` or `if let Some(val) = std::env::var("...").ok()` checks without crashing.
+- **Why not `.unwrap()`**: Calling `.unwrap()` panics if the variable is not set in the shell, which would crash the indexer binary on startup.
+
+#### 4. Mutable Borrow (`&mut config`) for Layered Merging
+- **Why `&mut config`**: Starting with a mutable `IndexerConfig::default()` and mutating its fields sequentially (Defaults → File → Env) keeps the precedence chain linear, understandable, and free of redundant struct re-allocations.
+
+
 
 
 

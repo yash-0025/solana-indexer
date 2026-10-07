@@ -22,6 +22,12 @@
 ### Flag something as shaky
 > "Mark <topic> as `[!]` in LEARNING.md — I got it working but I don't fully understand <specific part>."
 
+### Mandatory approval before modifying files (Governance gate)
+> "Before editing or generating any files, stop and explain what changes you propose to make and wait for my explicit approval."
+
+### Test layered configuration fallbacks (Module 1.3)
+> "Walk me through how to verify all 3 tiers of `IndexerConfig`: default fallbacks, partial TOML file overrides, and environment variable overrides."
+
 ---
 
 *(Add your own as they come up.)*

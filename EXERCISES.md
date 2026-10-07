@@ -38,11 +38,271 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
-*(None currently — all Module 1.2 exercises solved!)*
+### Exercise 1.3b (Day 1) — 3-Tier Precedence Configuration Loading & TOML Parsing
+**Status:** open
+**Goal:** Implement `ConfigFile` deserialization and layered configuration loading resolving defaults, TOML overrides, and environment variable overrides with unit tests.
+
+**Skeleton:**
+```rust
+use serde::Deserialize;
+use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
+
+/// Intermediate optional schema for deserializing `config.toml`.
+/// Fields are `Option<T>` so partial configuration files merge cleanly onto defaults.
+#[derive(Debug, Deserialize, Default, PartialEq)]
+pub struct ConfigFile {
+    pub rpc_url: Option<String>,
+    pub target_program: Option<String>,
+    pub commitment: Option<String>,
+    pub poll_interval_ms: Option<u64>,
+    pub data_dir: Option<String>,
+}
+
+impl ConfigFile {
+    /// Deserializes a raw TOML string slice into a `ConfigFile`.
+    pub fn from_toml_str(content: &str) -> Result<Self, toml::de::Error> {
+        // TODO(1): Use `toml::from_str` to deserialize `content` into `ConfigFile`
+        todo!()
+    }
+}
+
+impl IndexerConfig {
+    /// Loads configuration through 3-tier precedence:
+    /// Tier 1: `IndexerConfig::default()`
+    /// Tier 2: `toml_str` overrides (if provided)
+    /// Tier 3: Environment variables (`INDEXER_RPC_URL`, `INDEXER_COMMITMENT`, `INDEXER_POLL_INTERVAL_MS`, `INDEXER_DATA_DIR`)
+    pub fn load_from_str_and_env(toml_str: Option<&str>) -> Result<Self, String> {
+        // TODO(2): Initialize `config` with `Self::default()`
+
+        // TODO(3): If `toml_str` is Some, parse via `ConfigFile::from_toml_str`.
+        //          For each field present in `ConfigFile`:
+        //          - `rpc_url`: update `config.rpc_url`
+        //          - `target_program`: parse string into Pubkey via `Pubkey::from_str` and update `config.target_program`
+        //          - `commitment`: update `config.commitment`
+        //          - `poll_interval_ms`: update `config.poll_interval_ms`
+        //          - `data_dir`: update `config.data_dir`
+
+        // TODO(4): Check environment variables and override corresponding fields:
+        //          - If `std::env::var("INDEXER_RPC_URL")` is Ok, update `config.rpc_url`
+        //          - If `std::env::var("INDEXER_COMMITMENT")` is Ok, update `config.commitment`
+        //          - If `std::env::var("INDEXER_POLL_INTERVAL_MS")` is Ok, parse `.parse::<u64>()` and update `config.poll_interval_ms`
+        //          - If `std::env::var("INDEXER_DATA_DIR")` is Ok, update `config.data_dir`
+
+        // TODO(5): Return `Ok(config)`
+        todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Note: Keep your existing `test_indexer_config_default_and_custom` test!
+
+    #[test]
+    fn test_config_file_from_toml_str() {
+        let toml_data = r#"
+            rpc_url = "https://api.mainnet-beta.solana.com"
+            commitment = "finalized"
+            poll_interval_ms = 500
+        "#;
+        let file = ConfigFile::from_toml_str(toml_data).expect("Failed to parse TOML");
+        assert_eq!(file.rpc_url, Some("https://api.mainnet-beta.solana.com".to_string()));
+        assert_eq!(file.commitment, Some("finalized".to_string()));
+        assert_eq!(file.poll_interval_ms, Some(500));
+        assert_eq!(file.data_dir, None);
+    }
+
+    #[test]
+    fn test_layered_config_toml_overrides_defaults() {
+        let toml_data = r#"
+            rpc_url = "https://custom-rpc.com"
+            poll_interval_ms = 250
+        "#;
+        let config = IndexerConfig::load_from_str_and_env(Some(toml_data))
+            .expect("Failed to load layered config");
+        assert_eq!(config.rpc_url, "https://custom-rpc.com");
+        assert_eq!(config.poll_interval_ms, 250);
+        assert_eq!(config.commitment, "confirmed");
+        assert_eq!(config.data_dir, "./data");
+    }
+
+    #[test]
+    fn test_layered_config_env_overrides_file_and_defaults() {
+        std::env::set_var("INDEXER_RPC_URL", "https://env-override-rpc.com");
+        std::env::set_var("INDEXER_POLL_INTERVAL_MS", "100");
+
+        let toml_data = r#"
+            rpc_url = "https://custom-rpc.com"
+            poll_interval_ms = 250
+        "#;
+        let config = IndexerConfig::load_from_str_and_env(Some(toml_data))
+            .expect("Failed to load layered config");
+
+        assert_eq!(config.rpc_url, "https://env-override-rpc.com");
+        assert_eq!(config.poll_interval_ms, 100);
+
+        std::env::remove_var("INDEXER_RPC_URL");
+        std::env::remove_var("INDEXER_POLL_INTERVAL_MS");
+    }
+}
+```
+
+**Constraints:** Retain method signatures; ensure `Option<T>` fields in `ConfigFile`; do not alter test assertions.
+**Hints used:** 0/3
+**My attempt:** *(paste here when ready, even if broken/partial)*
 
 ---
 
 ## Solved
+
+### Exercise 1.3 (Day 1) — Configuration System: IndexerConfig & Hierarchy Defaults
+**Status:** solved
+**Goal:** Define `IndexerConfig` struct representing indexer configuration with owned `String` fields, `Default` trait implementation for Devnet defaults, and constructor with unit tests.
+
+**Skeleton:**
+```rust
+use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
+
+/// Runtime configuration settings for the Solana Indexer.
+#[derive(Debug, Clone, PartialEq)]
+pub struct IndexerConfig {
+    pub rpc_url: String,
+    pub target_program: Pubkey,
+    pub commitment: String,
+    pub poll_interval_ms: u64,
+    pub data_dir: String,
+}
+
+impl Default for IndexerConfig {
+    /// Provides sane cluster defaults pointing to Solana Devnet and the standard System Program.
+    fn default() -> Self {
+        // TODO(1): Construct Self with:
+        // - rpc_url: "https://api.devnet.solana.com".to_string()
+        // - target_program: Pubkey::from_str("11111111111111111111111111111111").unwrap()
+        // - commitment: "confirmed".to_string()
+        // - poll_interval_ms: 1000
+        // - data_dir: "./data".to_string()
+        todo!()
+    }
+}
+
+impl IndexerConfig {
+    /// Creates a custom `IndexerConfig`.
+    pub fn new(
+        rpc_url: String,
+        target_program: Pubkey,
+        commitment: String,
+        poll_interval_ms: u64,
+        data_dir: String,
+    ) -> Self {
+        // TODO(2): Return `Self` populated with the given arguments
+        todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_indexer_config_default_and_custom() {
+        let default_config = IndexerConfig::default();
+        assert_eq!(default_config.rpc_url, "https://api.devnet.solana.com");
+        assert_eq!(default_config.commitment, "confirmed");
+        assert_eq!(default_config.poll_interval_ms, 1000);
+        assert_eq!(default_config.data_dir, "./data");
+        assert_eq!(
+            default_config.target_program,
+            Pubkey::from_str("11111111111111111111111111111111").unwrap()
+        );
+
+        let custom_program = Pubkey::new_unique();
+        let custom_config = IndexerConfig::new(
+            "http://127.0.0.1:8899".to_string(),
+            custom_program,
+            "finalized".to_string(),
+            500,
+            "/tmp/indexer-data".to_string(),
+        );
+
+        assert_eq!(custom_config.rpc_url, "http://127.0.0.1:8899");
+        assert_eq!(custom_config.target_program, custom_program);
+        assert_eq!(custom_config.commitment, "finalized");
+        assert_eq!(custom_config.poll_interval_ms, 500);
+        assert_eq!(custom_config.data_dir, "/tmp/indexer-data");
+    }
+}
+```
+
+**Constraints:** Maintain field types; ensure `Default` trait returns valid Devnet fallbacks; do not change test assertions.
+**Hints used:** 0/3
+**My attempt:**
+```rust
+use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct IndexerConfig {
+    pub rpc_url: String,
+    pub target_program: Pubkey,
+    pub commitment: String,
+    pub poll_interval_ms: u64,
+    pub data_dir: String,
+}
+
+impl Default for IndexerConfig {
+    fn default() -> Self {
+        Self {
+            rpc_url: "https://api.devnet.solana.com".to_string(),
+            target_program: Pubkey::from_str("11111111111111111111111111111111").unwrap(),
+            commitment: "confirmed".to_string(),
+            poll_interval_ms: 1000,
+            data_dir: "./data".to_string(),
+        }
+    }
+}
+
+impl IndexerConfig {
+    pub fn new(rpc_url: String, target_program: Pubkey, commitment: String, poll_interval_ms: u64, data_dir: String) -> Self {
+        Self {
+            rpc_url,
+            target_program,
+            commitment,
+            poll_interval_ms,
+            data_dir,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_indexer_config_default_and_custom() {
+        let default_config = IndexerConfig::default();
+        assert_eq!(default_config.rpc_url, "https://api.devnet.solana.com");
+        assert_eq!(default_config.target_program, Pubkey::from_str("11111111111111111111111111111111").unwrap());
+        assert_eq!(default_config.commitment, "confirmed");
+        assert_eq!(default_config.poll_interval_ms, 1000);
+        assert_eq!(default_config.data_dir, "./data");
+
+        let custom_program = Pubkey::new_unique();
+        let custom_config = IndexerConfig::new(
+            "http://127.0.0.8899".to_string(), custom_program, "finalized".to_string(), 500, "/tmp/indexer-data".to_string(),
+        );
+
+        assert_eq!(custom_config.rpc_url, "http://127.0.0.8899");
+        assert_eq!(custom_config.target_program, custom_program);
+        assert_eq!(custom_config.commitment, "finalized");
+        assert_eq!(custom_config.poll_interval_ms, 500);
+        assert_eq!(custom_config.data_dir, "/tmp/indexer-data");
+    }
+}
+```
 
 ### Exercise 1.2d (Day 1) — Slot Metadata & Tuple Structs: SlotInfo
 **Status:** solved

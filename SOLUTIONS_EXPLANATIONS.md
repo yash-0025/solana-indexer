@@ -69,5 +69,21 @@
 - `pub fn is_parent_consecutive(&self) -> bool { self.slot.0 == self.parent_slot.0 + 1 }`: Unpacks the inner `u64` via `.0` positional index and evaluates equality without a trailing semicolon.
 - `impl fmt::Display for SlotInfo`: Matches on `self.block_height` to render either the integer string or `"none"` within the formatted ledger header.
 
+---
+
+### Solution 1.3 — Configuration System: IndexerConfig & Hierarchy Defaults
+
+**Plain English Thought Translation:**
+> "Define the indexer's runtime configuration struct holding the RPC endpoint, target program ID, commitment level, poll interval, and local data directory. Store owned heap strings instead of borrowed slices so the config can be shared across async tasks without lifetime friction. Implement the standard `Default` trait pointing to Devnet and System Program, and provide a constructor for custom runtime environments."
+
+**Syntax & Decision Breakdown:**
+- `pub struct IndexerConfig`: A public named-field struct holding the runtime configuration settings.
+- `pub rpc_url: String, pub commitment: String, pub data_dir: String`: Owned `String` types ensure heap allocation at initialization time, preventing lifetime parameters (`<'a>`) from infecting downstream structs.
+- `pub target_program: Pubkey`: Stores the 32-byte public key of the smart contract the indexer monitors.
+- `pub poll_interval_ms: u64`: Unsigned 64-bit integer specifying polling cadence in milliseconds.
+- `impl Default for IndexerConfig`: Rust standard library trait for generating canonical default values (`IndexerConfig::default()`).
+- `Pubkey::from_str(...).unwrap()`: Parses a 32-byte base58 address string into a `Pubkey`. Safe in static initialization for known canonical addresses like the System Program.
+- `pub fn new(...) -> Self`: Constructor pattern taking owned parameters and binding them into `Self { ... }` shorthand.
+
 
 

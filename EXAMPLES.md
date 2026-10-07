@@ -64,6 +64,26 @@
 **Technical explanation:**
 > On Solana, validators produce blocks within chronological slots (nominally every 400ms). Not every slot produces a block (due to leader skips or network partitions), so slots do not form a strict contiguous integer sequence without gaps. An indexer must record slot progression using `SlotInfo`, tracking the current slot (`slot: Slot`), the confirmed predecessor slot (`parent_slot: Slot`), and the optional cumulative block height (`block_height: Option<u64>`). In Rust, rather than using raw primitive `u64` for all numeric fields, we utilize a **tuple struct** (`pub struct Slot(pub u64)`). This creates a zero-cost newtype wrapper that provides strong compile-time type safety—preventing developers from accidentally passing a lamport balance, timestamp, or block height where a slot number is expected.
 
+---
+
+### 1.3 — Configuration System & Ownership Hierarchy (The Telegraph Transmission Dispatch Slip)
+
+**ELI5 (domain analogy):**
+> Imagine setting up a telegraph wire receiver desk in a busy shipping port. Before the telegraph operator listens to the live ticker cable, they look at the desk's **station dispatch order**. The order specifies: which telegraph frequency tower to tune into (RPC URL), which merchant fleet's shipments to track (target program ID), how strictly confirmed a receipt must be before filing (commitment level), how often to ping the line (poll interval), and which filing cabinet drawer to store documents in (data directory). If the manager leaves a note overriding the tower frequency for today (an environment variable override), the operator tunes to that note first. If there's no note and no custom order slip, the operator falls back to the standard station default settings. In our indexer, `IndexerConfig` is that multi-tier station dispatch order.
+
+**Technical explanation:**
+> A production blockchain indexer must never hardcode endpoint URLs, target contract addresses, or operational parameters into its binary. Doing so prevents multi-environment deployments (localnet, devnet, mainnet-beta) and blocks indexing multiple programs without code changes. In Rust, we implement a layered configuration system through `IndexerConfig`. The system defines a strongly-typed schema holding runtime settings: `rpc_url: String`, `target_program: Pubkey`, `commitment: String`, `poll_interval_ms: u64`, and `data_dir: String`. To avoid lifetime constraints (`'a`) that would tether the configuration struct to temporary file buffers, fields use owned heap types (`String` instead of borrowed `&str`). The configuration implements the `Default` trait for sane cluster fallbacks, deserializes declarative files via `serde` and `toml`, and merges runtime overrides using `std::env::var` fallbacks (`Option::unwrap_or`).
+
+---
+
+### 1.3b — 3-Tier Configuration Precedence & TOML Parsing (The Harbor Customs Clearing Rules)
+
+**ELI5 (domain analogy):**
+> Imagine the chief customs inspector at a maritime port clearance depot. Every morning, inspectors consult the standard standing harbor manual (the built-in defaults) for standard inspection rules. However, each shipping terminal also provides a typed daily manifest schedule (`config.toml`) specifying specific ship docking slips and cargo quarantine intervals. Finally, if the port authority radios an emergency priority broadcast over the ship-to-shore frequency (an environment variable), that live radio instruction overrides both the printed terminal schedule and the standing manual on the spot. In our indexer, this three-tier resolution guarantees that live operational overrides always take precedence over static files, which in turn override built-in fallbacks.
+
+**Technical explanation:**
+> In distributed systems and production indexing pipelines, configuration parameters must adhere to the 12-factor application methodology. Configuration resolves through three tiers of increasing precedence: built-in defaults (`IndexerConfig::default()`), persistent declarative configuration files (`config.toml` parsed via `std::fs::read_to_string` and `toml::from_str`), and runtime process environment variables (`std::env::var`). In Rust, parsing external TOML data involves declaring a deserializable intermediate schema (`ConfigFile`) where all fields are wrapped in `Option<T>`, allowing partial configuration files without schema errors. Environment variable reads return `Result<String, VarError>`, which convert idiomatically into `Option<String>` via `.ok()`. By mutably borrowing the default configuration (`&mut config`), the loader selectively updates fields from the parsed TOML and environment variables using conditional assignment, yielding a validated, owned `IndexerConfig` without data races or heap allocations during subsequent indexing stages.
+
 
 
 

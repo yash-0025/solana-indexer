@@ -7,6 +7,82 @@
 ## 2026-10-07
 
 <details>
+<summary>2026-10-07 — social.md, PROMPTS.md, Conversation.md — Add Module 1.3b Social Content & Update Workflow Gate Logging</summary>
+
+**Before:**
+- `social.md`: Lacked Module 1.3b entry.
+- `PROMPTS.md`: Did not have prompts for mandatory approval gates and layered config testing.
+- `Conversation.md`: Ended at Exercise 1.2b entry.
+
+**After:**
+- `social.md`: Added Module 1.3b entry:
+  - English standalone post & 4-tweet thread focusing on **Why Partial TOML Deserialization Needs `Option<T>` & Serde Schema Mapping**.
+  - Hinglish standalone post & 4-tweet thread focusing on **Docker Deployments & The 12-Factor "No Recompile" Mindset**.
+  - All tweets strictly verified under 280 characters.
+- `PROMPTS.md`: Added reusable prompt snippets for the mandatory file-edit approval gate and 3-tier config testing.
+- `Conversation.md`: Added discussion entry for 2026-10-07 recording Exercise 1.3 completion, gate enforcement, and Module 1.3b alignment.
+
+**Why:** Enforce strict governance rules, user approval gates, social media journey tracking (Rule 25), and prompt maintenance.
+</details>
+
+<details>
+<summary>2026-10-07 — SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md, EXAMPLES.md, Rust-Decisions.md, hinglish-docs.md — Record Solution 1.3 & Initiate Concept 1.3b (3-Tier Precedence TOML & Env Loading)</summary>
+
+**Before:**
+- `SOLUTIONS.md`: Ended at Solution 1.2d.
+- `SOLUTIONS_EXPLANATIONS.md`: Ended at Solution 1.2d.
+- `EXERCISES.md`: Exercise 1.3 open under `## Open / In-Progress`.
+- `EXAMPLES.md`: Ended at Concept 1.3.
+- `Rust-Decisions.md`: Ended at Module 1.3 (`Option<T>` for Env Overrides).
+- `hinglish-docs.md`: Had Sections 1 to 7 with Cheatsheet as Section 8.
+
+**After:**
+- `SOLUTIONS.md`: Appended Solution 1.3 (`IndexerConfig` & `Default` Devnet fallback reference implementation and comparison).
+- `SOLUTIONS_EXPLANATIONS.md`: Appended Solution 1.3 plain English thought translation and syntax breakdown.
+- `EXERCISES.md`: Moved Exercise 1.3 to `## Solved` with learner's passing attempt; added Exercise 1.3b skeleton (`ConfigFile` deserialization and `load_from_str_and_env` 3-tier precedence loading) to `## Open / In-Progress`.
+- `EXAMPLES.md`: Appended Concept 1.3b ELI5 (The Harbor Customs Clearing Rules) and technical explanation.
+- `Rust-Decisions.md`: Appended Concept 1.3b decisions (`ConfigFile` with `Option<T>` fields, `std::fs::read_to_string`, `std::env::var().ok()`, mutable borrowing for layered merging).
+- `hinglish-docs.md`: Added Section 8 for Module 1.3b with complete 7-component structure, updated TOC, and renumbered Cheatsheet to Section 9.
+
+**Why:** The learner completed and verified Exercise 1.3 with passing tests. Advanced curriculum to complete Module 1.3 deliverable (TOML file parsing and env var overrides) per Rules 2, 6, 8, 11, 12, 13, 14, 15, 17, 19, 20, 24, and Step 3 / 3.5.
+</details>
+
+<details>
+<summary>2026-10-07 — social.md — Add Module 1.3 social journey content (English + Hinglish with distinct topics)</summary>
+
+**Before:**
+- `social.md` only had entries up to Module 1.2.
+
+**After:**
+- Added Module 1.3 (`IndexerConfig`) social content containing:
+  - English standalone post & 4-tweet thread focusing on **The Cost of Borrowed Config: Why Lifetimes Viral-Spread in Systems**.
+  - Hinglish standalone post & 4-tweet thread focusing on **Devnet Se Mainnet Ka Safar & The "Hardcoded URL" Ki Tabahi**.
+  - All tweets strictly verified under 280 characters.
+
+**Why:** User requested generating social journey content for X (formerly Twitter) with each active exercise/module per Rule 25.
+</details>
+
+<details>
+<summary>2026-10-07 — Cargo.toml, EXAMPLES.md, Rust-Decisions.md, hinglish-docs.md, EXERCISES.md — Initiate Module 1.3 (Configuration System & Ownership)</summary>
+
+**Before:**
+- `Cargo.toml` lacked `serde` and `toml`.
+- `EXAMPLES.md` ended at Concept 1.2d.
+- `Rust-Decisions.md` ended at Module 1.2d.
+- `hinglish-docs.md` had Sections 1 to 7 (ending at Systems Cheatsheet).
+- `EXERCISES.md` had no open exercise.
+
+**After:**
+- Added `serde = { version = "1.0", features = ["derive"] }` and `toml = "0.8"` to `Cargo.toml`.
+- Added Concept 1.3 ELI5 (The Telegraph Transmission Dispatch Slip) and technical explanation to `EXAMPLES.md`.
+- Added Module 1.3 Rust decisions (`String` vs `&str`, `Default` trait, `Option` overrides) to `Rust-Decisions.md`.
+- Added Section 7 for Module 1.3 (with full 7-component structure) to `hinglish-docs.md`, updated TOC, and renumbered Cheatsheet to Section 8.
+- Added Exercise 1.3 skeleton (`IndexerConfig` & `Default` trait implementation) to `EXERCISES.md` under `## Open / In-Progress`.
+
+**Why:** Resumed curriculum per `/next` advancing to Module 1.3 per Rules 2, 6, 8, 11, 12, 13, 15, 17, 20, 24, and Step 3 / 3.5.
+</details>
+
+<details>
 <summary>2026-10-07 — LEARNING.md, ROADMAP.md, RULES.md, .agents/rules/social.md, social.md — Complete Module 1.2 & Mandate Distinct Topics in Rule 25</summary>
 
 **Before:**

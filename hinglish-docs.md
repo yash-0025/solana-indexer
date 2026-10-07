@@ -13,7 +13,9 @@
 4. [Module 1.2b — Transaction Receipts & Signatures: `TransactionRecord` (The Clearinghouse Slip)](#4-module-12b--transaction-receipts--signatures-transactionrecord-the-clearinghouse-slip)
 5. [Module 1.2c — Instruction Modeling: `DecodedInstruction` & Enums (The Itemized Dispatch Voucher)](#5-module-12c--instruction-modeling-decodedinstruction--enums-the-itemized-dispatch-voucher)
 6. [Module 1.2d — Slot Metadata & Tuple Structs: `SlotInfo` (The Master Ledger Page Header)](#6-module-12d--slot-metadata--tuple-structs-slotinfo-the-master-ledger-page-header)
-7. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#7-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
+7. [Module 1.3 — Configuration System: `IndexerConfig` & Ownership (The Telegraph Dispatch Order)](#7-module-13--configuration-system-indexerconfig--ownership-the-telegraph-dispatch-order)
+8. [Module 1.3b — 3-Tier Precedence Configuration Loading & TOML Parsing (The Harbor Customs Clearing Rules)](#8-module-13b--3-tier-precedence-configuration-loading--toml-parsing-the-harbor-customs-clearing-rules)
+9. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#9-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
 
 ---
 
@@ -374,7 +376,183 @@ pub struct SlotInfo {
 
 ---
 
-## 7. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
+## 7. Module 1.3 — Configuration System: `IndexerConfig` & Ownership (The Telegraph Dispatch Order)
+
+### 🌐 Overview: Big Picture (Kyun Chahiye Ye Component?)
+Socho kal ko tumhara indexer ready ho gaya. Ab tumhe usse:
+1. Apne local test validator par chalana hai (`http://127.0.0.1:8899`).
+2. Devnet par public testing karni hai (`https://api.devnet.solana.com`).
+3. Ya Mainnet par production deployment karni hai!
+
+Agar RPC URL, program address, commitment level, ya polling interval code me **hardcode** honge (jaise `main.rs` me likh diya tha), toh environment badalne ke liye tumhe poora code re-edit aur recompile karna padega! Production systems me ye paap hai.
+Isliye banaya jata hai ek **Layered Configuration System (`IndexerConfig`)**:
+- Pehle default settings hoti hain.
+- Phir configuration file (`config.toml`) se read hoti hain.
+- Aur agar koi environment variable (jaise `SOLANA_RPC_URL`) set ho, toh wo sabko override kar leta hai!
+
+### 🎯 Goal of this Step (Is Step Ka Final Target)
+Is step ke khatam hone par hamare paas ye deliverables ready hone chahiye:
+1. `IndexerConfig` struct define hoga jo indexer ki saari runtime settings sambhalega:
+   - `rpc_url: String`
+   - `target_program: Pubkey`
+   - `commitment: String`
+   - `poll_interval_ms: u64`
+   - `data_dir: String`
+2. `Default` trait implement hoga jo bina kisi config file ke sane Devnet defaults provide karega (`IndexerConfig::default()`).
+3. Custom constructor `IndexerConfig::new(...)` implement hoga custom environments ke liye.
+4. Unit tests pass honge jo default aur custom configuration dono ko verify karenge.
+
+### 📖 Intuition & Engineering Concept: The Telegraph Transmission Dispatch Order
+Socho ek busy port par telegraph wire receiver desk hai jahan operator live telegraph ticker cable sunta hai.
+Kaam shuru karne se pehle, operator desk par rakhi **Station Dispatch Order Slip** dekhta hai:
+- Kis telegraph frequency tower par radio tune karna hai (RPC URL).
+- Kis merchant ship fleet ki movements track karni hain (Target Program ID).
+- Wire receipt ko kitna pakka maanna hai file karne se pehle (Commitment level).
+- Kitni der me line ping karni hai (Poll interval).
+- Aur kis drawer me files store karni hain (Data directory).
+
+Agar manager ne desk par ek temporary urgent memo chhod diya (Environment Variable Override), toh operator standard slip chhod kar turant us memo wali frequency tune kar leta hai!
+Hamare indexer me `IndexerConfig` wahi station dispatch order slip hai.
+
+### 🛠️ Architecture & Data Model (`IndexerConfig`)
+```rust
+use solana_sdk::pubkey::Pubkey;
+
+/// Runtime configuration settings for the Solana Indexer.
+#[derive(Debug, Clone, PartialEq)]
+pub struct IndexerConfig {
+    pub rpc_url: String,
+    pub target_program: Pubkey,
+    pub commitment: String,
+    pub poll_interval_ms: u64,
+    pub data_dir: String,
+}
+```
+
+### 💭 Plain Thought Translation (Dimaag Me Code Kaise Sochna Hai)
+> *"Indexer ke configuration ko ek strongly-typed struct me pack karo. Hardcoded URLs aur parameters ko eliminate karo. Owned `String` use karo taaki temporary file buffers ya lifetimes ka bhoot na lage. Ek standard `Default` trait implementation do jo Devnet aur System Program par point kare, aur ek custom constructor do jo kisi bhi environment ke liye config bana sake."*
+
+### 📝 Skeleton TODO Guide (TODOs Ka Matlab & Implementation Tips)
+1. **`TODO(1)` Default Trait (`impl Default for IndexerConfig`)**:
+   - `Self` return karna hai jisme:
+     - `rpc_url`: `"https://api.devnet.solana.com".to_string()`
+     - `target_program`: `Pubkey::from_str("11111111111111111111111111111111").unwrap()` (System Program ID)
+     - `commitment`: `"confirmed".to_string()`
+     - `poll_interval_ms`: `1000` (1 second)
+     - `data_dir`: `"./data".to_string()`
+2. **`TODO(2)` Custom Constructor (`IndexerConfig::new`)**:
+   - Passed arguments (`rpc_url`, `target_program`, etc.) ko directly `Self { ... }` me bind karke return karo without semicolon.
+
+### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
+1. **`String` vs `&str` — Config me Owned String kyu li, Borrowed Slice kyu nahi?**
+   - Config struct ko app start hone par banaya jata hai aur poore indexer ke lifetime tak har background worker, RPC client, aur async task me pass kiya jata hai.
+   - Agar hum `&str` lete, toh struct par lifetime `'a` lagani padti (`IndexerConfig<'a>`). Iska matlab config us temporary file/buffer se bandh jata jisse read kiya gaya tha!
+   - Owned `String` heap par independent copy rakhti hai, jisse config ko bina kisi lifetime jhanjhat ke kisi bhi thread ya future task me move kiya ja sakta hai.
+2. **`Default` Trait ka Faayda:**
+   - Rust me `Default` trait ek standardized pattern hai. `IndexerConfig::default()` call karke unit tests aur local testing bina 5 parameters pass kiye chal jati hai.
+3. **`Option<T>` aur `unwrap_or` for Env Overrides:**
+   - Environment variables (`std::env::var`) runtime pe exist kar bhi sakte hain aur nahi bhi (`Option<T>` ya `Result<T, VarError>`).
+   - Agar `.unwrap()` use karoge aur env var na mile, toh poora app panic karke crash ho jayega!
+   - `.unwrap_or(default_value)` se hum bina crash huye gracefully fallback value use kar lete hain.
+
+---
+
+## 8. Module 1.3b — 3-Tier Precedence Configuration Loading & TOML Parsing (The Harbor Customs Clearing Rules)
+
+### 🌐 Overview: Big Picture (Kyun Chahiye Ye Component?)
+Pichhle step me humne `IndexerConfig` struct banaya aur usme default values daali. Lekin real world me indexer run karte waqt tum har bar code recompile nahi kar sakte!
+Socho production me 3 scenarios aate hain:
+1. **Local Developer:** Apne computer par `config.toml` file banata hai aur test settings save karta hai.
+2. **Devnet/Staging Tester:** Agar file na mile toh chupchap default settings use ho jani chahiye bina crash hue.
+3. **Docker / Kubernetes / Cloud Production:** DevOps engineer runtime par container environment variable pass karta hai (jaise `INDEXER_RPC_URL="https://my-premium-rpc.com"`). Ye container env var file aur default dono ko chupchap override kar lena chahiye!
+
+Is system ko kehte hain **3-Tier Precedence Hierarchy**:
+Environment Variables (Top) > `config.toml` (Middle) > Default Fallbacks (Base).
+
+### 🎯 Goal of this Step (Is Step Ka Final Target)
+Is step ke complete hone par hamare paas ye working deliverables honge:
+1. `ConfigFile` struct banega jisme saare fields `Option<T>` honge (`Option<String>`, `Option<u64>`), jisse user partial config file bhi likh sake.
+2. `ConfigFile::from_toml_str` function banega jo `toml::from_str` use karke raw text ko Rust struct me parse karega.
+3. `IndexerConfig::load_from_str_and_env` method banega jo:
+   - Base me `Self::default()` lega.
+   - Agar TOML string mile, toh file ke non-empty fields se config update karega.
+   - Phir check karega ki koi `INDEXER_*` env var set hai kya; agar hai toh wo final override ban jayega!
+4. Unit tests pass honge jo teenon paths (defaults, TOML override, Env var override) ko mathematically verify karenge.
+
+### 📖 Intuition & Engineering Concept: The Harbor Customs Clearing Rules
+Socho ek busy sea port par customs clearing office hai.
+Har subah customs inspector ke paas ek **Standard Harbor Manual** (Default settings) hoti hai jo fixed rules batati hai.
+Lekin har shipping terminal ek printed daily schedule (**`config.toml`**) submit karta hai jisme specific dock numbers aur custom quarantine timings likhe hote hain.
+Aur achanak agar Port Authority ka radio buzzer bajta hai aur emergency radio broadcast (**Environment Variable**) aati hai ki *"Shipment 402 ko dock 9 par prioritize karo!"*, toh radio broadcast printed schedule aur standard manual dono ko cancel karke khud supreme rule ban jati hai!
+Hamare indexer me exact yahi 3-tier precedence chalti hai taaki live deploy me maximum flexibility mile.
+
+### 🛠️ Architecture & Data Model (`ConfigFile` & Precedence Flow)
+```text
++-------------------------------------------------------------+
+|               3-TIER CONFIGURATION PRECEDENCE               |
++-------------------------------------------------------------+
+
+ Tier 3 (Highest):  Environment Variables (std::env::var)
+                    [ INDEXER_RPC_URL, INDEXER_POLL_INTERVAL_MS ]
+                                  |
+                                  v (Overrides if present)
+ Tier 2 (Middle):   TOML Configuration File (config.toml)
+                    [ ConfigFile::from_toml_str() ]
+                                  |
+                                  v (Falls back if file missing)
+ Tier 1 (Base):     Rust Default Trait (IndexerConfig::default())
+                    [ Hardcoded Sane Devnet Defaults ]
+                                  |
+                                  v
+                    +---------------------------+
+                    | Final IndexerConfig Struct|
+                    +---------------------------+
+```
+
+```rust
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize, Default, PartialEq)]
+pub struct ConfigFile {
+    pub rpc_url: Option<String>,
+    pub target_program: Option<String>,
+    pub commitment: Option<String>,
+    pub poll_interval_ms: Option<u64>,
+    pub data_dir: Option<String>,
+}
+```
+
+### 💭 Plain Thought Translation (Dimaag Me Code Kaise Sochna Hai)
+> *"Pehle ek default `IndexerConfig` banao. Agar user ne koi TOML file pass ki hai, toh usse `toml::from_str` se parse karo aur jo-jo field file me maujood (`Some`) hain, sirf unhe mutable config me overwrite karo. Uske baad system ke environment variables check karo; agar cloud operator ne `INDEXER_RPC_URL` set kiya hai, toh wo file wale URL ko bhi override kar dega. Aakhri me ek fully validated, priority-merged `IndexerConfig` return karo bina kisi runtime panic ke."*
+
+### 📝 Skeleton TODO Guide (TODOs Ka Matlab & Implementation Tips)
+1. **`TODO(1)` TOML Deserialization (`ConfigFile::from_toml_str`)**:
+   - `toml::from_str(content)` call karo aur Result return karo. `serde` derive macro background me text parsing ka saara heavy lifting khud kar lega.
+2. **`TODO(2)` Base Config Initialization**:
+   - `let mut config = Self::default();` banao. Yahan `mut` keyword zaroori hai kyuki aage hum fields ko conditionally mutate karenge.
+3. **`TODO(3)` Apply TOML Overrides (if present)**:
+   - Agar `toml_str` is `Some(s)`, toh `ConfigFile::from_toml_str(s)` se parse karo.
+   - `if let Some(url) = file.rpc_url { config.rpc_url = url; }` jaise pattern se fields update karo.
+   - `target_program` ke liye `Pubkey::from_str(&p)` parse karke assign karo.
+4. **`TODO(4)` Environment Variable Overrides**:
+   - `if let Ok(url) = std::env::var("INDEXER_RPC_URL") { config.rpc_url = url; }`
+   - Numeric fields (jaise `poll_interval_ms`) ke liye `if let Ok(s) = std::env::var("INDEXER_POLL_INTERVAL_MS") { if let Ok(val) = s.parse::<u64>() { config.poll_interval_ms = val; } }`.
+5. **`TODO(5)` Return Result**:
+   - Return `Ok(config)`.
+
+### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
+1. **`ConfigFile` me Saare Fields `Option<T>` Kyun Rakhe?**
+   - Agar tum struct me raw `String` ya `u64` rakh dete, toh TOML file me agar user ne sirf ek field miss kar diya, toh `toml::from_str` turant error phek deta!
+   - `Option<T>` use karne se user partial config file likh sakta hai (e.g. sirf `rpc_url` badalna hai, baaki sab default rehne do). Rust me ye clean fallback configuration ka standard golden rule hai.
+2. **`std::env::var` me `.unwrap()` Kyun Nahi Use Kiya?**
+   - Agar tum `std::env::var("INDEXER_RPC_URL").unwrap()` likh doge aur terminal me wo env var set nahi hua, toh Rust turant panic karega aur app startup pe hi dump ho jayega!
+   - `if let Ok(val)` ya `.ok()` use karne se agar variable missing ho, toh error silently drop ho jata hai aur humara fallback safe rehta hai.
+3. **`let mut config` (Mutable Borrowing):**
+   - Hum ek mutable struct ko in-place modify karte hain. Isse baar-baar naye structs create karne ka memory overhead nahi hota aur code linear, clean rehta hai.
+
+---
+
+## 9. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
 
 | Component | Humne Kya Use Kiya | Kya Reject Kiya Aur Kyun? (Technical Trade-off) |
 | :--- | :--- | :--- |
