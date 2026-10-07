@@ -56,5 +56,18 @@
 - `pub fn account_count(&self) -> usize`: Immutably borrows `&self` and evaluates `self.accounts.len()` as the return value expression without a trailing semicolon.
 - `match &self.payload`: Borrows the payload reference to inspect variants without moving ownership. Guarantees compile-time exhaustiveness.
 
+---
+
+### Solution 1.2d — Slot Metadata & Tuple Structs: SlotInfo
+
+**Plain English Thought Translation:**
+> "Model a slot boundary on the Solana ledger. Wrap the raw slot numbers inside a type-safe `Slot` newtype tuple struct so they can never be confused with balances or heights. Track the slot, its confirmed parent slot, and the optional block height (accounting for skipped slots). Provide a constructor, a check to detect whether the slot was immediately consecutive to its parent, and format it cleanly for display."
+
+**Syntax & Decision Breakdown:**
+- `pub struct Slot(pub u64)`: Defines a single-element tuple struct (Newtype pattern). Creates a distinct type at compile time with `repr(transparent)` zero-cost memory layout.
+- `pub block_height: Option<u64>`: Handles skipped slots where no block was minted. `None` models absent blocks without sentinel value bugs.
+- `pub fn is_parent_consecutive(&self) -> bool { self.slot.0 == self.parent_slot.0 + 1 }`: Unpacks the inner `u64` via `.0` positional index and evaluates equality without a trailing semicolon.
+- `impl fmt::Display for SlotInfo`: Matches on `self.block_height` to render either the integer string or `"none"` within the formatted ledger header.
+
 
 

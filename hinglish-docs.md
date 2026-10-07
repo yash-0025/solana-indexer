@@ -294,6 +294,25 @@ pub struct DecodedInstruction {
 
 ## 6. Module 1.2d — Slot Metadata & Tuple Structs: `SlotInfo` (The Master Ledger Page Header)
 
+### 🌐 Overview: Big Picture (Kyun Chahiye Ye Component?)
+Ab tak humne indexer me teen core domain models bana liye hain:
+1. Individual account ka state snapshot (`AccountSnapshot`)
+2. Confirmed transaction receipt (`TransactionRecord`)
+3. Transaction ke andar executed individual operations (`DecodedInstruction`)
+
+Lekin Solana par transactions hawa me execute nahi hote — wo ek specific **Slot (block time window)** ke andar execute hote hain!
+Agar indexer ko ye hi nahi pata hoga ki kaunsa slot chal raha hai, pichhla parent slot kaunsa tha, aur kya beech me koi slot skip ho gaya, toh indexer kabhi bhi historical backfill, live streaming, ya consensus fork/reorg ko handle nahi kar payega. `SlotInfo` humare indexer ka timekeeper aur ledger page header hai!
+
+### 🎯 Goal of this Step (Is Step Ka Final Target)
+Is step ke khatam hone par hamare paas ye deliverables ready hone chahiye:
+1. `src/models/slot.rs` file create hogi.
+2. `Slot(pub u64)` tuple struct define hoga jo compile-time type safety dega.
+3. `SlotInfo` struct define hoga jisme teen fields honge: `slot: Slot`, `parent_slot: Slot`, aur `block_height: Option<u64>`.
+4. Constructor `SlotInfo::new(slot, parent_slot, block_height)` implement hoga.
+5. Helper method `is_parent_consecutive(&self) -> bool` banega jo skip slots detect karega.
+6. `Display` trait implement hoga taaki terminal pe sundar log dikhe.
+7. Unit tests pass honge aur `src/models/mod.rs` me export hoga.
+
 ### 📖 Intuition & Engineering Concept: The Master Ledger Page Header
 Socho ek archivist (record keeper) daily banking operations ka hisaab ek moti master ledger book me maintain kar raha hai.
 - Har ledger page ke andar bohot saare accounts ke state cards (`AccountSnapshot`) hote hain.
@@ -327,6 +346,19 @@ pub struct SlotInfo {
     pub block_height: Option<u64>,
 }
 ```
+
+### 💭 Plain Thought Translation (Dimaag Me Code Kaise Sochna Hai)
+> *"Solana ledger ke slot boundary ko model karo. Raw slot numbers ko ek type-safe `Slot` newtype tuple struct me pack karo taaki balance (`lamports`) ya block height se confuse na ho sakein. Slot number, uska confirmed parent slot, aur optional block height track karo (kyunki skip slots me block nahi banta). Constructor banao jo raw `u64` ko `Slot` me wrap kare, check karo ki slot aur parent consecutive the ya beech me gap tha (`self.slot.0 == self.parent_slot.0 + 1`), aur display format sundar rakho."*
+
+### 📝 Skeleton TODO Guide (TODOs Ka Matlab & Implementation Tips)
+1. **`TODO(1)` Constructor (`SlotInfo::new`)**:
+   - Signature me raw `slot: u64` aur `parent_slot: u64` aayenge.
+   - Struct me store karte waqt unhe tuple struct me wrap karna hai: `slot: Slot(slot)` aur `parent_slot: Slot(parent_slot)`.
+   - `block_height` seedha pass hoga. Return expression me `Self { ... }` likhna hai bina semicolon ke.
+2. **`TODO(2)` Consecutive Check (`is_parent_consecutive`)**:
+   - Check karna hai ki kya current slot theek parent slot ke agle number par hai (`self.slot.0 == self.parent_slot.0 + 1`).
+   - `.0` tuple struct ke pehle unnamed field ko access karta hai.
+   - Expression ke aage semicolon `;` mat lagana taaki wo direct `bool` return kare!
 
 ### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
 1. **Tuple Struct `Slot(pub u64)` vs Type Alias `type Slot = u64` (The Newtype Pattern):**

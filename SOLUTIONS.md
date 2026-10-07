@@ -304,5 +304,85 @@ mod tests {
 - **Matches:** Struct fields, enum variants, constructor `Self { program_id, accounts, payload }`, `account_count()` method returning `self.accounts.len()`, `Display` formatting with `match &self.payload`, and passing unit test.
 - **Difference:** None! Your implementation matches the reference perfectly.
 
+---
+
+### Solution 1.2d — Slot Metadata & Tuple Structs: SlotInfo
+
+**Reference implementation:**
+```rust
+use std::fmt;
+
+/// Tuple struct representing a Solana slot number.
+/// Provides type safety so slots are never confused with balances or heights.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Slot(pub u64);
+
+/// Metadata describing an observed ledger slot on the cluster.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SlotInfo {
+    pub slot: Slot,
+    pub parent_slot: Slot,
+    pub block_height: Option<u64>,
+}
+
+impl SlotInfo {
+    /// Creates a new `SlotInfo`.
+    pub fn new(slot: u64, parent_slot: u64, block_height: Option<u64>) -> Self {
+        Self {
+            slot: Slot(slot),
+            parent_slot: Slot(parent_slot),
+            block_height,
+        }
+    }
+
+    /// Checks if the parent slot is directly consecutive (i.e. slot == parent_slot + 1),
+    /// indicating no leader slots were skipped between them.
+    pub fn is_parent_consecutive(&self) -> bool {
+        self.slot.0 == self.parent_slot.0 + 1
+    }
+}
+
+impl fmt::Display for SlotInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let height_str = match self.block_height {
+            Some(h) => h.to_string(),
+            None => "none".to_string(),
+        };
+        write!(f, "Slot {} (parent: {}, height: {})", self.slot.0, self.parent_slot.0, height_str)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_slot_info_creation_and_consecutive_check() {
+        let consecutive_info = SlotInfo::new(105, 104, Some(90));
+        assert_eq!(consecutive_info.slot, Slot(105));
+        assert_eq!(consecutive_info.parent_slot, Slot(104));
+        assert_eq!(consecutive_info.block_height, Some(90));
+        assert!(consecutive_info.is_parent_consecutive());
+
+        let skipped_info = SlotInfo::new(110, 108, Some(94));
+        assert!(!skipped_info.is_parent_consecutive());
+
+        let display = format!("{}", consecutive_info);
+        assert!(display.contains("Slot 105"));
+        assert!(display.contains("parent: 104"));
+        assert!(display.contains("height: 90"));
+    }
+}
+```
+
+**Why this & why not that:**
+- `pub struct Slot(pub u64)`: The Newtype pattern creates a distinct type at compile time with zero runtime overhead, preventing accidental confusion with lamports or heights.
+- `Option<u64>` for `block_height`: Correctly accounts for leader skip slots where no block is minted without resorting to dangerous sentinel 0 values.
+- `self.slot.0 == self.parent_slot.0 + 1`: Directly unpacks the inner `u64` via positional `.0` indexing for consecutive parent slot verification.
+
+**Compared to your attempt:**
+- **Matches:** Tuple struct definition with full derive attributes, `SlotInfo` struct fields, constructor `Self { slot: Slot(slot), parent_slot: Slot(parent_slot), block_height }`, consecutive check returning `self.slot.0 == self.parent_slot.0 + 1`, `Display` formatting with `Option` matching, and passing unit tests.
+- **Difference:** None! Your implementation matches the reference perfectly.
+
 
 

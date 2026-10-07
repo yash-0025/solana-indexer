@@ -7,6 +7,73 @@
 ## 2026-10-07
 
 <details>
+<summary>2026-10-07 — LEARNING.md, ROADMAP.md, RULES.md, .agents/rules/social.md, social.md — Complete Module 1.2 & Mandate Distinct Topics in Rule 25</summary>
+
+**Before:**
+- `LEARNING.md` line 26: `- [~] 1.2 — Domain Types: The Language of On-Chain Data`.
+- `ROADMAP.md` Module 1.2 had unchecked `[ ]` boxes.
+- `RULES.md` Rule 25 & `.agents/rules/social.md` allowed English and Hinglish content to cover the same points with only tonal differences.
+- `social.md` Module 1.2 had both English and Hinglish discussing the exact same list of 4 domain structs.
+
+**After:**
+- Marked Module 1.2 as complete `[x]` in `LEARNING.md` line 26 and checked off all 4 requirement items in `ROADMAP.md`.
+- Updated Rule 25 in `RULES.md` and `.agents/rules/social.md` strictly mandating that English and Hinglish content must explore **completely different technical topics and angles** (e.g. English dives into Rust low-level type systems and zero-cost abstractions; Hinglish explores Solana runtime quirks, consensus skip slots, and builder lessons).
+- Rewrote `social.md` Module 1.2:
+  - English focuses on **Primitive Obsession & Rust Zero-Cost Newtypes (`Slot(pub u64)`)**.
+  - Hinglish focuses on **Solana Stateless Runtime Shock (`executable: true` vs Data Accounts) & Consensus Skip-Slot Detection**.
+  - All tweets verified strictly under 280 characters.
+
+**Why:** Learner confirmed passing `cargo test`, explicitly authorized marking Module 1.2 complete, and requested strict distinction in topics and takeaways between English and Hinglish social content per Rules 1, 2, 23, and 25.
+</details>
+
+<details>
+<summary>2026-10-07 — SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md — Record Solution 1.2d and mark Exercise 1.2d solved</summary>
+
+**Before:**
+- `SOLUTIONS.md` and `SOLUTIONS_EXPLANATIONS.md` ended at Solution 1.2c.
+- `EXERCISES.md` had Exercise 1.2d in `## Open / In-Progress` with `Status: open`.
+
+**After:**
+- Appended Solution 1.2d reference implementation, rationale, and comparison to `SOLUTIONS.md`.
+- Appended Solution 1.2d thought translation and syntax breakdown to `SOLUTIONS_EXPLANATIONS.md`.
+- Moved Exercise 1.2d to `## Solved` with `Status: solved` and recorded learner's working implementation in `EXERCISES.md`.
+
+**Why:** Learner implemented `SlotInfo` and `Slot` tuple struct in `src/models/slot.rs`, exported them in `src/models/mod.rs`, verified passing `cargo test`, and requested advancement per Rules 2, 9, 19, 20, and Step 3.5-D.
+</details>
+
+<details>
+<summary>2026-10-07 — social.md, RULES.md, .agents/workflows/next.md, .agents/rules/social.md — Establish Rule 25 & create social.md for X journey content</summary>
+
+**Before:**
+- `social.md` did not exist.
+- `RULES.md` ended at Rule 24.
+- `.agents/workflows/next.md` lacked social media tracking.
+- `.agents/rules/social.md` did not exist.
+
+**After:**
+- Created `social.md` containing standalone posts and 4-tweet threads for Module 1.1 and Module 1.2 in both English and Hinglish with independent creative angles, strictly within 280 characters per tweet.
+- Added Rule 25 to `RULES.md` mandating shareable journey content generation in `social.md` for X (Twitter) in both English and Hinglish with verified character limits and distinct angles.
+- Updated `.agents/workflows/next.md` (STEP 3 item 12, STEP 4 working files, STEP 7 audit) to enforce Rule 25.
+- Created `.agents/rules/social.md` with full directives and format guidelines.
+
+**Why:** User requested public journey sharing on X (Twitter) with separate standalone posts and threads in both English and Hinglish (not identical translations) respecting the ~280 character limit.
+</details>
+
+<details>
+<summary>2026-10-07 — hinglish-docs.md, .agents/rules/hinglish-docs.md — Standardize full 7-component Hinglish curriculum documentation</summary>
+
+**Before:**
+- `hinglish-docs.md` Section 6 lacked explicit Overview, Goal of this Step, Plain Thought Translation, and Skeleton TODO Guide.
+- `.agents/rules/hinglish-docs.md` did not enumerate all required Hinglish subsections.
+
+**After:**
+- Enriched `hinglish-docs.md` Section 6 (`SlotInfo`) with Overview (Big Picture), Goal of this Step, Plain Thought Translation, and Skeleton TODO Guide. Excluded ASCII diagrams (retained purely in English).
+- Updated `.agents/rules/hinglish-docs.md` to formally require the 7-component structure for every module's Hinglish documentation alongside parallel English teaching.
+
+**Why:** User requested comprehensive self-sufficient Hinglish coverage so dual-referencing English sections isn't necessary for conceptual understanding and implementation tasks, while maintaining parallel English explanations and keeping ASCII diagrams in English only.
+</details>
+
+<details>
 <summary>2026-10-07 — SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md, EXAMPLES.md, Rust-Decisions.md, hinglish-docs.md — Record Solution 1.2c and Initiate Exercise 1.2d (SlotInfo & Slot Tuple Struct)</summary>
 
 **Before:**

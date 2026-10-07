@@ -55,10 +55,10 @@ Every module has:
 ---
 
 ### Module 1.2 — Domain Types: The Language of On-Chain Data
-- [ ] **You build:** Core domain types modeling what an indexer actually indexes: `AccountSnapshot` (Pubkey, owner, lamports, data, slot), `TransactionRecord` (signature, slot, block_time, success), `DecodedInstruction` (program_id, accounts, decoded payload), `SlotInfo`.
-- [ ] **Concepts:** Structs (named-field, tuple structs) · Enums as algebraic data types · `match` exhaustiveness · Deriving `Debug`, `Clone`, `PartialEq` · `impl` blocks, `Self::new()` constructor pattern · `&self` vs `&mut self` · `Pubkey`/`Signature` wrapper types from `solana-sdk` · Type aliases · `///` doc comments
-- [ ] **Architecture:** Domain-Driven Design applied to indexing — why your types should model "what an indexer produces" independent of any one program, so Phase 3's multi-program support doesn't require rewriting these.
-- [ ] **Deliverable:** All core types defined in `src/models/` with constructors, `Display` formatting, and basic unit tests.
+- [x] **You build:** Core domain types modeling what an indexer actually indexes: `AccountSnapshot` (Pubkey, owner, lamports, data, slot), `TransactionRecord` (signature, slot, block_time, success), `DecodedInstruction` (program_id, accounts, decoded payload), `SlotInfo`.
+- [x] **Concepts:** Structs (named-field, tuple structs) · Enums as algebraic data types · `match` exhaustiveness · Deriving `Debug`, `Clone`, `PartialEq` · `impl` blocks, `Self::new()` constructor pattern · `&self` vs `&mut self` · `Pubkey`/`Signature` wrapper types from `solana-sdk` · Type aliases · `///` doc comments
+- [x] **Architecture:** Domain-Driven Design applied to indexing — why your types should model "what an indexer produces" independent of any one program, so Phase 3's multi-program support doesn't require rewriting these.
+- [x] **Deliverable:** All core types defined in `src/models/` with constructors, `Display` formatting, and basic unit tests.
 
 ---
 

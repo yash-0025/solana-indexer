@@ -23,7 +23,7 @@
 ## Phase 1 — Synchronous Foundations Through a Real CLI Indexer
 
 - [x] 1.1 — Project Setup & Cargo Fundamentals
-- [~] 1.2 — Domain Types: The Language of On-Chain Data
+- [x] 1.2 — Domain Types: The Language of On-Chain Data
 - [ ] 1.3 — Configuration System
 - [ ] 1.4 — CLI Interface: The Indexer Terminal
 - [ ] 1.5 — Error Handling: When RPC Calls Fail
