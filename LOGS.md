@@ -7,6 +7,28 @@
 ## 2026-10-07
 
 <details>
+<summary>2026-10-07 — SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md, EXAMPLES.md, Rust-Decisions.md, hinglish-docs.md — Record Solution 1.2c and Initiate Exercise 1.2d (SlotInfo & Slot Tuple Struct)</summary>
+
+**Before:**
+- `SOLUTIONS.md` and `SOLUTIONS_EXPLANATIONS.md` ended at Solution 1.2b.
+- `EXERCISES.md` had Exercise 1.2c in `## Open / In-Progress`.
+- `EXAMPLES.md` ended at Concept 1.2c.
+- `Rust-Decisions.md` ended at Module 1.2c.
+- `hinglish-docs.md` had Sections 1 to 6 (ending at Systems Cheatsheet).
+
+**After:**
+- Recorded Solution 1.2c reference implementation and comparison in `SOLUTIONS.md`.
+- Added Solution 1.2c thought translation and syntax breakdown in `SOLUTIONS_EXPLANATIONS.md`.
+- Moved Exercise 1.2c to `## Solved` with learner's working attempt in `EXERCISES.md`.
+- Added Exercise 1.2d skeleton (`Slot` tuple struct, `SlotInfo` domain struct) to `EXERCISES.md` under `## Open / In-Progress`.
+- Added Concept 1.2d ELI5 (The Master Ledger Page Header) and technical explanation to `EXAMPLES.md`.
+- Added Module 1.2d Rust decisions (tuple struct vs type alias, `Option<u64>`, `.0` indexing) to `Rust-Decisions.md`.
+- Added Section 6 for Module 1.2d, shifted Cheatsheet to Section 7, and updated Table of Contents and Cheatsheet in `hinglish-docs.md`.
+
+**Why:** Learner confirmed unit tests passed for Exercise 1.2c and requested `/next`. Recorded solution and initiated the final deliverable of Module 1.2 per Rules 2, 6, 8, 11, 19, 20, 24, and Step 3.5.
+</details>
+
+<details>
 <summary>2026-10-07 — EXERCISES.md, EXAMPLES.md, Rust-Decisions.md, hinglish-docs.md — Initiate Exercise 1.2c (DecodedInstruction & Algebraic Enums)</summary>
 
 **Before:**

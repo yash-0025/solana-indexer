@@ -74,6 +74,22 @@
 #### 3. Match Exhaustiveness in `Display`
 - **Why `match &self.payload`**: Rust requires every enum variant to be handled explicitly. When new instruction types (e.g., `Mint`, `Burn`, `Swap`) are added later, the compiler will refuse to compile until every `match` block is updated, preventing silent display bugs.
 
+---
+
+### Module 1.2d — Slot Metadata & Tuple Structs: SlotInfo
+
+#### 1. Tuple Struct `Slot(pub u64)` vs Type Alias `type Slot = u64`
+- **Why Tuple Struct (Newtype pattern)**: In Rust, a tuple struct creates a distinct new type at compile time with zero runtime memory overhead (`repr(transparent)` by default). It prevents bugs where a raw integer like `lamports: u64` or `block_height: u64` is mistakenly passed into a slot parameter.
+- **Why not `type Slot = u64`**: A type alias in Rust is merely a synonym, not a distinct type. The compiler treats `Slot` and `u64` as identical, allowing accidental misuse across function arguments without any compile-time error.
+
+#### 2. `Option<u64>` for `block_height`
+- **Why `Option<u64>`**: Block height represents the cumulative count of non-skipped blocks from genesis up to the current slot. Because validators can skip slots when leader nodes fail to propose a block, block height is absent (`None`) for unconfirmed or skipped slots.
+- **Why not sentinel `0`**: Genesis block is height 0. Using sentinel 0 causes indexer databases to conflate skipped slots with the network's genesis block.
+
+#### 3. `self.slot.0 == self.parent_slot.0 + 1` (Consecutive Parent Check)
+- **Why `.0` field access**: Tuple struct fields are indexed positionally starting at `0`. Accessing `.0` directly unpacks the inner `u64` for arithmetic comparison without requiring boilerplate getter methods.
+
+
 
 
 

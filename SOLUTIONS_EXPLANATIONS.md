@@ -43,4 +43,18 @@
 - `pub fn is_success(&self) -> bool { self.success }`: Immutably borrows `&self` and evaluates `self.success` as the return expression without a trailing semicolon.
 - `impl fmt::Display for TransactionRecord`: Implements formatting for `{}`. Slices `&sig_str[..8]` and `&sig_str[sig_str.len() - 8..]` safely because Base58 characters are 1-byte ASCII tokens.
 
+---
+
+### Solution 1.2c — Instruction Modeling: DecodedInstruction & Algebraic Enums
+
+**Plain English Thought Translation:**
+> "Represent an atomic instruction executed within a Solana transaction. Record which on-chain program was invoked (by Pubkey), all account addresses passed as inputs, and categorize the action payload using an algebraic enum—either a structured transfer with a lamport amount or raw binary bytes. Provide a constructor, a count helper, and format it clearly for display with exhaustive pattern matching."
+
+**Syntax & Decision Breakdown:**
+- `pub enum InstructionPayload`: Defines an algebraic data type where variants carry disparate data. `Transfer { amount: u64 }` is a struct-like variant; `Raw(Vec<u8>)` is a tuple-like variant.
+- `pub accounts: Vec<Pubkey>`: A dynamically-sized vector of 32-byte public keys on the heap, allowing any number of input accounts without stack waste.
+- `pub fn account_count(&self) -> usize`: Immutably borrows `&self` and evaluates `self.accounts.len()` as the return value expression without a trailing semicolon.
+- `match &self.payload`: Borrows the payload reference to inspect variants without moving ownership. Guarantees compile-time exhaustiveness.
+
+
 

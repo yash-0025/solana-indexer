@@ -54,6 +54,17 @@
 **Technical explanation:**
 > Within a Solana transaction, execution logic is composed of one or more instructions processed atomically by validator runtimes. Each instruction targets an executable on-chain program (`program_id: Pubkey`), passes an ordered list of account references (`accounts: Vec<Pubkey>`), and delivers an instruction payload. To model instruction payloads cleanly in Rust without resorting to untyped strings or dynamic JSON objects, we utilize an algebraic data type (`enum InstructionPayload`). In Rust, enums can embed different data shapes inside each variant—such as `Transfer { amount: u64 }` for structured payments, or `Raw(Vec<u8>)` for unparsed or arbitrary contract calls. Modeling instructions via `DecodedInstruction` decouples transaction-level metadata from program-level logic, allowing downstream indexing pipelines to match exhaustively on payload variants with zero runtime reflection overhead.
 
+---
+
+### 1.2d — Slot Metadata & Tuple Structs (The Master Ledger Page Header)
+
+**ELI5 (domain analogy):**
+> Imagine an archivist cataloguing daily banking records into a bound master ledger. Individual account cards (`AccountSnapshot`), wire slips (`TransactionRecord`), and itemized vouchers (`DecodedInstruction`) are all filed under a specific ledger page. For every ledger page, the archivist records a **master page header slip**: the exact page number (the slot), which preceding page number it continues from (the parent slot), and the cumulative block height in the ledger volume. If page 105 lists page 103 as its parent, the archivist immediately detects that page 104 was skipped or orphaned by consensus. In our indexer, `SlotInfo` is that ledger page header, and the tuple struct `Slot` guarantees you never mix up page numbers with currency amounts.
+
+**Technical explanation:**
+> On Solana, validators produce blocks within chronological slots (nominally every 400ms). Not every slot produces a block (due to leader skips or network partitions), so slots do not form a strict contiguous integer sequence without gaps. An indexer must record slot progression using `SlotInfo`, tracking the current slot (`slot: Slot`), the confirmed predecessor slot (`parent_slot: Slot`), and the optional cumulative block height (`block_height: Option<u64>`). In Rust, rather than using raw primitive `u64` for all numeric fields, we utilize a **tuple struct** (`pub struct Slot(pub u64)`). This creates a zero-cost newtype wrapper that provides strong compile-time type safety—preventing developers from accidentally passing a lamport balance, timestamp, or block height where a slot number is expected.
+
+
 
 
 

@@ -38,8 +38,85 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
-### Exercise 1.2c (Day 1) — Instruction Modeling: DecodedInstruction & Algebraic Enums
+### Exercise 1.2d (Day 1) — Slot Metadata & Tuple Structs: SlotInfo
 **Status:** open
+**Goal:** Define `Slot` tuple struct and `SlotInfo` domain struct with constructor, consecutive parent check helper, `Display` formatting, and unit tests.
+
+**Skeleton:**
+```rust
+use std::fmt;
+
+/// Tuple struct representing a Solana slot number.
+/// Provides type safety so slots are never confused with balances or heights.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Slot(pub u64);
+
+/// Metadata describing an observed ledger slot on the cluster.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SlotInfo {
+    pub slot: Slot,
+    pub parent_slot: Slot,
+    pub block_height: Option<u64>,
+}
+
+impl SlotInfo {
+    /// Creates a new `SlotInfo`.
+    pub fn new(slot: u64, parent_slot: u64, block_height: Option<u64>) -> Self {
+        // TODO(1): Construct and return `Self` wrapping slots in `Slot(...)`
+        todo!()
+    }
+
+    /// Checks if the parent slot is directly consecutive (i.e. slot == parent_slot + 1),
+    /// indicating no leader slots were skipped between them.
+    pub fn is_parent_consecutive(&self) -> bool {
+        // TODO(2): Return `self.slot.0 == self.parent_slot.0 + 1` without trailing semicolon
+        todo!()
+    }
+}
+
+impl fmt::Display for SlotInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let height_str = match self.block_height {
+            Some(h) => h.to_string(),
+            None => "none".to_string(),
+        };
+        write!(f, "Slot {} (parent: {}, height: {})", self.slot.0, self.parent_slot.0, height_str)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_slot_info_creation_and_consecutive_check() {
+        let consecutive_info = SlotInfo::new(105, 104, Some(90));
+        assert_eq!(consecutive_info.slot, Slot(105));
+        assert_eq!(consecutive_info.parent_slot, Slot(104));
+        assert_eq!(consecutive_info.block_height, Some(90));
+        assert!(consecutive_info.is_parent_consecutive());
+
+        let skipped_info = SlotInfo::new(110, 108, Some(94));
+        assert!(!skipped_info.is_parent_consecutive());
+
+        let display = format!("{}", consecutive_info);
+        assert!(display.contains("Slot 105"));
+        assert!(display.contains("parent: 104"));
+        assert!(display.contains("height: 90"));
+    }
+}
+```
+
+**Constraints:** Maintain tuple struct wrapping `Slot(pub u64)`; ensure `Option<u64>` for `block_height`.
+**Hints used:** 0/3
+**My attempt:** *(paste here when ready, even if broken/partial)*
+
+---
+
+## Solved
+
+### Exercise 1.2c (Day 1) — Instruction Modeling: DecodedInstruction & Algebraic Enums
+**Status:** solved
 **Goal:** Define `DecodedInstruction` and `InstructionPayload` algebraic enum with constructor, helper methods, `Display` formatting, and unit tests.
 
 **Skeleton:**
@@ -123,11 +200,81 @@ mod tests {
 
 **Constraints:** Maintain enum variant data payloads; ensure exhaustive `match` handling in `Display`.
 **Hints used:** 0/3
-**My attempt:** *(paste here when ready, even if broken/partial)*
+**My attempt:**
+```rust
+use solana_sdk::pubkey::Pubkey;
+use std::fmt;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum InstructionPayload {
+    Transfer { amount: u64 },
+    Raw(Vec<u8>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct DecodedInstruction {
+    pub program_id: Pubkey,
+    pub accounts: Vec<Pubkey>,
+    pub payload: InstructionPayload,
+}
+
+impl DecodedInstruction {
+    pub fn new(program_id: Pubkey, accounts: Vec<Pubkey>, payload: InstructionPayload) -> Self {
+        Self {
+            program_id,
+            accounts,
+            payload,
+        }
+    }
+
+    pub fn account_count(&self) -> usize {
+        self.accounts.len()
+    }
+}
+
+impl fmt::Display for DecodedInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let prog_str = self.program_id.to_string();
+        let short_prog = if prog_str.len() > 16 {
+            format!("{}...{}", &prog_str[..8], &prog_str[prog_str.len() - 8..])
+        } else {
+            prog_str
+        };
+
+        match &self.payload {
+            InstructionPayload::Transfer { amount } => {
+                write!(f, "Instruction [{}]: Transfer {} lamports across {} accounts", short_prog, amount, self.accounts.len())
+            }
+            InstructionPayload::Raw(bytes) => {
+                write!(f, "Instruction [{}]: Raw ({} bytes) across {} accounts", short_prog, bytes.len(), self.accounts.len())
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_decoded_instruction_transfer_and_display() {
+        let program_id = Pubkey::new_unique();
+        let sender = Pubkey::new_unique();
+        let receiver = Pubkey::new_unique();
+        let accounts = vec![sender, receiver];
+        let payload = InstructionPayload::Transfer { amount: 500_000 };
+
+        let ix = DecodedInstruction::new(program_id, accounts, payload);
+
+        assert_eq!(ix.account_count(), 2);
+        let display = format!("{}", ix);
+        assert!(display.contains("Transfer 500000 lamports"));
+        assert!(display.contains("across 2 accounts"));
+    }
+}
+```
 
 ---
-
-## Solved
 
 ### Exercise 1.2b (Day 1) — Transaction Receipts: TransactionRecord
 **Status:** solved

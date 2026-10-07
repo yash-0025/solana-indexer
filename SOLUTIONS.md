@@ -210,4 +210,99 @@ mod tests {
 - **Matches:** Struct definition, constructor `Self { signature, slot, block_time, success }`, `is_success()` returning `self.success` without a semicolon, `Display` implementation with truncated signature format, and passing unit test.
 - **Difference:** None! Your implementation matches the reference perfectly.
 
+---
+
+### Solution 1.2c — Instruction Modeling: DecodedInstruction & Algebraic Enums
+
+**Reference implementation:**
+```rust
+use solana_sdk::pubkey::Pubkey;
+use std::fmt;
+
+/// Represents the payload of a decoded instruction.
+#[derive(Debug, Clone, PartialEq)]
+pub enum InstructionPayload {
+    /// A transfer of funds with an explicit amount in lamports.
+    Transfer { amount: u64 },
+    /// An arbitrary program invocation with raw payload bytes.
+    Raw(Vec<u8>),
+}
+
+/// Represents an instruction executed within a transaction.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DecodedInstruction {
+    pub program_id: Pubkey,
+    pub accounts: Vec<Pubkey>,
+    pub payload: InstructionPayload,
+}
+
+impl DecodedInstruction {
+    /// Creates a new `DecodedInstruction`.
+    pub fn new(program_id: Pubkey, accounts: Vec<Pubkey>, payload: InstructionPayload) -> Self {
+        Self {
+            program_id,
+            accounts,
+            payload,
+        }
+    }
+
+    /// Returns the number of accounts involved in this instruction.
+    pub fn account_count(&self) -> usize {
+        self.accounts.len()
+    }
+}
+
+impl fmt::Display for DecodedInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let prog_str = self.program_id.to_string();
+        let short_prog = if prog_str.len() > 16 {
+            format!("{}...{}", &prog_str[..8], &prog_str[prog_str.len() - 8..])
+        } else {
+            prog_str
+        };
+
+        match &self.payload {
+            InstructionPayload::Transfer { amount } => {
+                write!(f, "Instruction [{}]: Transfer {} lamports across {} accounts", short_prog, amount, self.accounts.len())
+            }
+            InstructionPayload::Raw(bytes) => {
+                write!(f, "Instruction [{}]: Raw ({} bytes) across {} accounts", short_prog, bytes.len(), self.accounts.len())
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_decoded_instruction_transfer_and_display() {
+        let program_id = Pubkey::new_unique();
+        let sender = Pubkey::new_unique();
+        let receiver = Pubkey::new_unique();
+        let accounts = vec![sender, receiver];
+        let payload = InstructionPayload::Transfer { amount: 500_000 };
+
+        let ix = DecodedInstruction::new(program_id, accounts, payload);
+
+        assert_eq!(ix.account_count(), 2);
+        let display = format!("{}", ix);
+        assert!(display.contains("Transfer 500000 lamports"));
+        assert!(display.contains("across 2 accounts"));
+    }
+}
+```
+
+**Why this & why not that:**
+- `enum InstructionPayload`: Enums as Algebraic Data Types (ADTs) allow embedding distinct payloads per variant without heap boxing or runtime reflection.
+- `Vec<Pubkey>` vs fixed array: Supports dynamic account lists of arbitrary size without artificial limits.
+- `match &self.payload`: Enforces exhaustive pattern matching at compile time.
+- `self.accounts.len()`: Returning without semicolon yields `usize` cleanly as an expression.
+
+**Compared to your attempt:**
+- **Matches:** Struct fields, enum variants, constructor `Self { program_id, accounts, payload }`, `account_count()` method returning `self.accounts.len()`, `Display` formatting with `match &self.payload`, and passing unit test.
+- **Difference:** None! Your implementation matches the reference perfectly.
+
+
 

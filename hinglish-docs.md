@@ -12,7 +12,8 @@
 3. [Module 1.2 — Solana State Architecture & `AccountSnapshot` (The Standardized Catalog Card)](#3-module-12--solana-state-architecture--accountsnapshot-the-standardized-catalog-card)
 4. [Module 1.2b — Transaction Receipts & Signatures: `TransactionRecord` (The Clearinghouse Slip)](#4-module-12b--transaction-receipts--signatures-transactionrecord-the-clearinghouse-slip)
 5. [Module 1.2c — Instruction Modeling: `DecodedInstruction` & Enums (The Itemized Dispatch Voucher)](#5-module-12c--instruction-modeling-decodedinstruction--enums-the-itemized-dispatch-voucher)
-6. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#6-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
+6. [Module 1.2d — Slot Metadata & Tuple Structs: `SlotInfo` (The Master Ledger Page Header)](#6-module-12d--slot-metadata--tuple-structs-slotinfo-the-master-ledger-page-header)
+7. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#7-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
 
 ---
 
@@ -291,7 +292,57 @@ pub struct DecodedInstruction {
 
 ---
 
-## 6. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
+## 6. Module 1.2d — Slot Metadata & Tuple Structs: `SlotInfo` (The Master Ledger Page Header)
+
+### 📖 Intuition & Engineering Concept: The Master Ledger Page Header
+Socho ek archivist (record keeper) daily banking operations ka hisaab ek moti master ledger book me maintain kar raha hai.
+- Har ledger page ke andar bohot saare accounts ke state cards (`AccountSnapshot`) hote hain.
+- Bohat saari wire receipts (`TransactionRecord`) chipki hoti hain.
+- Aur receipts ke sath unke itemized vouchers (`DecodedInstruction`) lage hote hain.
+
+Lekin har naye panna (page) par kaam shuru karne se pehle, archivist sabse upar ek **Master Page Header Slip** likhta hai:
+1. **Current Page Number (`slot: Slot`):** Ye kaunsa slot ya ledger page hai.
+2. **Previous Continuation Page (`parent_slot: Slot`):** Ye page pichhle kis specific page ke hisaab ko aage continue kar raha hai!
+3. **Cumulative Block Volume (`block_height: Option<u64>`):** Ab tak total kitne finalized blocks mint ho chuke hain.
+
+#### 🕵️ Consensus Skip Detection (The Gap Detector):
+Solana par har 400ms me ek slot aata hai jisme designated validator leader ko block mint karna hota hai. Lekin agar validator offline ho gaya, internet gir gaya, ya fork partition ho gaya, toh wo slot **skip** ho jata hai!
+Matlab agar ledger ka current slot 105 hai aur uska parent slot 103 hai, toh archivist turant detect kar lega ki beech ka slot 104 consensus skip ya orphan ho gaya tha!
+Hamare indexer me `SlotInfo` wahi master page header hai, aur `is_parent_consecutive()` helper method instant gap detection karta hai.
+
+### 🛠️ Architecture & Data Model (`Slot` & `SlotInfo`)
+```rust
+use std::fmt;
+
+/// Tuple struct representing a Solana slot number.
+/// Provides type safety so slots are never confused with balances or heights.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Slot(pub u64);
+
+/// Metadata describing an observed ledger slot on the cluster.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SlotInfo {
+    pub slot: Slot,
+    pub parent_slot: Slot,
+    pub block_height: Option<u64>,
+}
+```
+
+### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
+1. **Tuple Struct `Slot(pub u64)` vs Type Alias `type Slot = u64` (The Newtype Pattern):**
+   - **Type Alias ka trap:** Agar hum `type Slot = u64` likhte, toh Rust compiler ke liye `Slot` aur `u64` 100% same hote. Agar developer galti se `SlotInfo::new(lamports, block_height, None)` likh deta, toh compiler bina kisi sharm ke code compile kar deta! Billions of lamports ko slot number samajh kar database corrupt ho jata.
+   - **Tuple Struct ka magic:** `pub struct Slot(pub u64)` ek distinct new type banata hai (Newtype pattern). Rust ka compiler strictly mana kar dega agar tum kisi function me raw `u64` ya balance pass karne ki koshish karoge. Aur sabse kamaal ki baat: zero runtime overhead! Compilation ke baad ye raw `u64` jitna fast aur lightweight hota hai (`repr(transparent)` layout).
+2. **`block_height: Option<u64>` (The Skipped Slot Reality):**
+   - Solana par `block_height` cumulative count hota hai un slots ka jisme actual blocks mint hue hain.
+   - Jab koi slot leader skip kar deta hai, toh us slot ke liye koi block produce nahi hota (`None`).
+   - Sentinel `0` use nahi kar sakte kyunki genesis block ka height `0` hota hai. Rust ka `Option` absence ko safely model karta hai.
+3. **`.0` Field Access (Positional Unpacking):**
+   - Tuple struct ke fields ke koi names nahi hote, isliye unhe numeric index `.0`, `.1` se access kiya jata hai.
+   - `self.slot.0 == self.parent_slot.0 + 1` se hum directly andar ke `u64` ko unpack karke comparison kar lete hain bina kisi clumsy getter method ke.
+
+---
+
+## 7. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
 
 | Component | Humne Kya Use Kiya | Kya Reject Kiya Aur Kyun? (Technical Trade-off) |
 | :--- | :--- | :--- |
@@ -302,6 +353,7 @@ pub struct DecodedInstruction {
 | **Ledger Timestamp** | `Option<i64>` (`Some`/`None`) | Sentinel `0` / `-1` (pollutes downstream DB with fake 1970 epoch dates) |
 | **Instruction Payload** | `enum InstructionPayload` (ADT with data) | Untyped JSON (`serde_json`) / raw strings (slow, heap alloc, runtime crashes) |
 | **Instruction Accounts** | `Vec<Pubkey>` (dynamic heap vector) | Fixed array `[Pubkey; 32]` (wastes stack memory, fails on 33+ accounts) |
+| **Slot Identification** | `Slot(pub u64)` (Tuple Struct) | `type Slot = u64` (Type alias allows accidental mixing with lamports/heights) |
 | **Lamport to SOL Math** | `self.lamports as f64 / 1e9` | `u64 / 1e9` (integer truncation drops fractional decimals like `0.5` SOL) |
 | **Constructor Type Alias**| `Self` | Concrete Struct Name (boilerplate, breaks if struct is renamed) |
 | **Process Failure Exit** | `std::process::exit(1)` | Normal return `()` (leaves orchestrator unaware of startup failure) |
