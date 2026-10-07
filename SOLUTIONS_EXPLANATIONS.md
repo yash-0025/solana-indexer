@@ -85,5 +85,22 @@
 - `Pubkey::from_str(...).unwrap()`: Parses a 32-byte base58 address string into a `Pubkey`. Safe in static initialization for known canonical addresses like the System Program.
 - `pub fn new(...) -> Self`: Constructor pattern taking owned parameters and binding them into `Self { ... }` shorthand.
 
+---
+
+### Solution 1.3b — 3-Tier Precedence Configuration Loading & TOML Parsing
+
+**Plain English Thought Translation:**
+> "Load indexer configuration by layering 3 tiers of precedence. Start with built-in Devnet defaults. Next, if a TOML string is provided, deserialize it into an optional schema and update only the fields explicitly provided in the file (parsing the target program string into a Pubkey). Finally, inspect system environment variables; if cloud orchestrators provided runtime overrides, apply them on top of file and default values. Return the fully resolved, strongly-typed configuration."
+
+**Syntax & Decision Breakdown:**
+- `#[derive(Debug, Deserialize, Default, PartialEq)] pub struct ConfigFile`: Intermediate schema using Serde. All fields are `Option<T>` so partial configuration files parse without validation errors.
+- `toml::from_str(content)`: Parses a raw TOML string slice into a strongly-typed Rust struct via `serde::Deserialize`.
+- `let mut config = Self::default();`: Initializes base defaults. The `mut` keyword is required to allow sequential in-place field updates across tiers.
+- `file_config.from_toml_str(content).map_err(|e| e.to_string())?`: Propagates parsing failures early if the TOML syntax is malformed.
+- `if let Some(val) = file_config.<field>`: Idiomatic pattern matching unwrapping optional fields only when explicitly provided in the file, preserving defaults for omitted fields.
+- `Pubkey::from_str(&program_str)`: Parses a base58 string address into a 32-byte cryptographic `Pubkey`.
+- `std::env::var("INDEXER_*")`: Reads operating system environment variables returning `Result<String, VarError>`. Matching on `if let Ok(...)` extracts the value safely without crashing when the variable is unset.
+- `unsafe { std::env::set_var(...) }`: Enforces Rust Edition 2024 concurrency safety discipline in multi-threaded test runners.
+
 
 

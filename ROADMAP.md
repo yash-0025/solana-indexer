@@ -63,10 +63,10 @@ Every module has:
 ---
 
 ### Module 1.3 — Configuration System
-- [ ] **You build:** A configuration loader reading from `config.toml` with environment variable overrides. Settings: RPC URL, target program ID, commitment level, poll interval, output data directory.
-- [ ] **Concepts:** Ownership deep dive — `String` vs `&str`, moves, clones · Borrowing: `&T` vs `&mut T` · The borrow checker as compile-time data-race prevention · `std::fs::read_to_string` · `toml` crate · `std::env::var` · `Option<T>` for optional config · `unwrap()` vs `unwrap_or` vs `unwrap_or_else`
-- [ ] **Architecture:** Configuration hierarchy (file → env → defaults). Why an indexer's config must be swappable per-program without recompiling — this is what makes Phase 3's multi-program indexer possible later.
-- [ ] **Deliverable:** Config loads from file with env var overrides. Unit tests for each fallback path.
+- [x] **You build:** A configuration loader reading from `config.toml` with environment variable overrides. Settings: RPC URL, target program ID, commitment level, poll interval, output data directory.
+- [x] **Concepts:** Ownership deep dive — `String` vs `&str`, moves, clones · Borrowing: `&T` vs `&mut T` · The borrow checker as compile-time data-race prevention · `std::fs::read_to_string` · `toml` crate · `std::env::var` · `Option<T>` for optional config · `unwrap()` vs `unwrap_or` vs `unwrap_or_else`
+- [x] **Architecture:** Configuration hierarchy (file → env → defaults). Why an indexer's config must be swappable per-program without recompiling — this is what makes Phase 3's multi-program indexer possible later.
+- [x] **Deliverable:** Config loads from file with env var overrides. Unit tests for each fallback path.
 
 ---
 

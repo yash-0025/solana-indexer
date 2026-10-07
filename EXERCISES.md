@@ -38,8 +38,14 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
+*(No open exercises. Ready for Module 1.4.)*
+
+---
+
+## Solved
+
 ### Exercise 1.3b (Day 1) — 3-Tier Precedence Configuration Loading & TOML Parsing
-**Status:** open
+**Status:** solved
 **Goal:** Implement `ConfigFile` deserialization and layered configuration loading resolving defaults, TOML overrides, and environment variable overrides with unit tests.
 
 **Skeleton:**
@@ -98,8 +104,6 @@ impl IndexerConfig {
 mod tests {
     use super::*;
 
-    // Note: Keep your existing `test_indexer_config_default_and_custom` test!
-
     #[test]
     fn test_config_file_from_toml_str() {
         let toml_data = r#"
@@ -130,9 +134,10 @@ mod tests {
 
     #[test]
     fn test_layered_config_env_overrides_file_and_defaults() {
-        std::env::set_var("INDEXER_RPC_URL", "https://env-override-rpc.com");
-        std::env::set_var("INDEXER_POLL_INTERVAL_MS", "100");
-
+        unsafe {
+            std::env::set_var("INDEXER_RPC_URL", "https://env-override-rpc.com");
+            std::env::set_var("INDEXER_POLL_INTERVAL_MS", "100");
+        }
         let toml_data = r#"
             rpc_url = "https://custom-rpc.com"
             poll_interval_ms = 250
@@ -143,19 +148,94 @@ mod tests {
         assert_eq!(config.rpc_url, "https://env-override-rpc.com");
         assert_eq!(config.poll_interval_ms, 100);
 
-        std::env::remove_var("INDEXER_RPC_URL");
-        std::env::remove_var("INDEXER_POLL_INTERVAL_MS");
+        unsafe {
+            std::env::remove_var("INDEXER_RPC_URL");
+            std::env::remove_var("INDEXER_POLL_INTERVAL_MS");
+        }
     }
 }
 ```
 
 **Constraints:** Retain method signatures; ensure `Option<T>` fields in `ConfigFile`; do not alter test assertions.
 **Hints used:** 0/3
-**My attempt:** *(paste here when ready, even if broken/partial)*
+**My attempt:**
+```rust
+use serde::Deserialize;
+use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
+
+#[derive(Debug, Deserialize, Default, PartialEq)]
+pub struct ConfigFile {
+    pub rpc_url: Option<String>,
+    pub target_program: Option<String>,
+    pub commitment: Option<String>,
+    pub poll_interval_ms: Option<u64>,
+    pub data_dir: Option<String>,
+}
+
+impl ConfigFile {
+    pub fn from_toml_str(content: &str) -> Result<Self, toml::de::Error> {
+        toml::from_str(content)
+    }
+}
+
+impl IndexerConfig {
+    pub fn load_from_str_and_env(toml_str: Option<&str>) -> Result<Self, String> {
+        let mut config = Self::default();
+
+        if let Some(content) = toml_str {
+            let file_config = ConfigFile::from_toml_str(content).map_err(|e| e.to_string())?;
+
+            if let Some(url) = file_config.rpc_url {
+                config.rpc_url = url;
+            }
+
+            if let Some(c) = file_config.commitment {
+                config.commitment = c;
+            }
+
+            if let Some(interval) = file_config.poll_interval_ms {
+                config.poll_interval_ms = interval;
+            }
+
+            if let Some(dir) = file_config.data_dir {
+                config.data_dir = dir;
+            }
+
+            if let Some(program_str) = file_config.target_program {
+                config.target_program = Pubkey::from_str(&program_str).map_err(|e| e.to_string())?;
+            }
+        }
+
+        if let Ok(env_url) = std::env::var("INDEXER_RPC_URL") {
+            config.rpc_url = env_url;
+        }
+
+        if let Ok(env_commit) = std::env::var("INDEXER_COMMITMENT") {
+            config.commitment = env_commit;
+        }
+
+        if let Ok(env_poll) = std::env::var("INDEXER_POLL_INTERVAL_MS") {
+            if let Ok(val) = env_poll.parse::<u64>() {
+                config.poll_interval_ms = val;
+            }
+        }
+
+        if let Ok(env_dir) = std::env::var("INDEXER_DATA_DIR") {
+            config.data_dir = env_dir;
+        }
+
+        if let Ok(env_prog) = std::env::var("INDEXER_TARGET_PROGRAM") {
+            if let Ok(prog) = Pubkey::from_str(&env_prog) {
+                config.target_program = prog;
+            }
+        }
+        Ok(config)
+    }
+}
+```
 
 ---
-
-## Solved
 
 ### Exercise 1.3 (Day 1) — Configuration System: IndexerConfig & Hierarchy Defaults
 **Status:** solved

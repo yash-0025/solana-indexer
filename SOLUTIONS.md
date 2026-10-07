@@ -478,5 +478,152 @@ mod tests {
 - **Matches:** Struct fields with owned types, complete `impl Default for IndexerConfig` with exact Devnet fallbacks, constructor shorthand `Self { rpc_url, ... }`, and passing unit test suite!
 - **Difference:** Your custom test URL used `"http://127.0.0.8899"` (a slight typo for `"http://127.0.0.1:8899"`), but your assertion matched it identically and all logic is completely sound.
 
+---
+
+### Solution 1.3b — 3-Tier Precedence Configuration Loading & TOML Parsing
+
+**Reference implementation:**
+```rust
+use serde::Deserialize;
+use solana_sdk::pubkey::Pubkey;
+use std::str::FromStr;
+
+/// Intermediate optional schema for deserializing `config.toml`.
+/// Fields are `Option<T>` so partial configuration files merge cleanly onto defaults.
+#[derive(Debug, Deserialize, Default, PartialEq)]
+pub struct ConfigFile {
+    pub rpc_url: Option<String>,
+    pub target_program: Option<String>,
+    pub commitment: Option<String>,
+    pub poll_interval_ms: Option<u64>,
+    pub data_dir: Option<String>,
+}
+
+impl ConfigFile {
+    /// Deserializes a raw TOML string slice into a `ConfigFile`.
+    pub fn from_toml_str(content: &str) -> Result<Self, toml::de::Error> {
+        toml::from_str(content)
+    }
+}
+
+impl IndexerConfig {
+    /// Loads configuration through 3-tier precedence:
+    /// Tier 1: `IndexerConfig::default()`
+    /// Tier 2: `toml_str` overrides (if provided)
+    /// Tier 3: Environment variables (`INDEXER_RPC_URL`, `INDEXER_COMMITMENT`, `INDEXER_POLL_INTERVAL_MS`, `INDEXER_DATA_DIR`, `INDEXER_TARGET_PROGRAM`)
+    pub fn load_from_str_and_env(toml_str: Option<&str>) -> Result<Self, String> {
+        let mut config = Self::default();
+
+        if let Some(content) = toml_str {
+            let file_config = ConfigFile::from_toml_str(content).map_err(|e| e.to_string())?;
+
+            if let Some(url) = file_config.rpc_url {
+                config.rpc_url = url;
+            }
+            if let Some(c) = file_config.commitment {
+                config.commitment = c;
+            }
+            if let Some(interval) = file_config.poll_interval_ms {
+                config.poll_interval_ms = interval;
+            }
+            if let Some(dir) = file_config.data_dir {
+                config.data_dir = dir;
+            }
+            if let Some(program_str) = file_config.target_program {
+                config.target_program = Pubkey::from_str(&program_str).map_err(|e| e.to_string())?;
+            }
+        }
+
+        if let Ok(env_url) = std::env::var("INDEXER_RPC_URL") {
+            config.rpc_url = env_url;
+        }
+        if let Ok(env_commit) = std::env::var("INDEXER_COMMITMENT") {
+            config.commitment = env_commit;
+        }
+        if let Ok(env_poll) = std::env::var("INDEXER_POLL_INTERVAL_MS") {
+            if let Ok(val) = env_poll.parse::<u64>() {
+                config.poll_interval_ms = val;
+            }
+        }
+        if let Ok(env_dir) = std::env::var("INDEXER_DATA_DIR") {
+            config.data_dir = env_dir;
+        }
+        if let Ok(env_prog) = std::env::var("INDEXER_TARGET_PROGRAM") {
+            if let Ok(prog) = Pubkey::from_str(&env_prog) {
+                config.target_program = prog;
+            }
+        }
+
+        Ok(config)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_config_file_from_toml_str() {
+        let toml_data = r#"
+        rpc_url = "https://api.mainnet-beta.solana.com"
+        commitment = "finalized"
+        poll_interval_ms = 500
+        "#;
+
+        let file = ConfigFile::from_toml_str(toml_data).expect("Failed to parse TOML");
+        assert_eq!(file.rpc_url, Some("https://api.mainnet-beta.solana.com".to_string()));
+        assert_eq!(file.commitment, Some("finalized".to_string()));
+        assert_eq!(file.poll_interval_ms, Some(500));
+        assert_eq!(file.data_dir, None);
+        assert_eq!(file.target_program, None);
+    }
+
+    #[test]
+    fn test_layered_config_toml_overrides_defaults() {
+        let toml_data = r#"
+            rpc_url = "https://custom-rpc.com"
+            poll_interval_ms = 250
+        "#;
+        let config = IndexerConfig::load_from_str_and_env(Some(toml_data))
+            .expect("Failed to load layered config");
+        assert_eq!(config.rpc_url, "https://custom-rpc.com");
+        assert_eq!(config.poll_interval_ms, 250);
+        assert_eq!(config.commitment, "confirmed");
+        assert_eq!(config.data_dir, "./data");
+    }
+
+    #[test]
+    fn test_layered_config_env_overrides_file_and_defaults() {
+        unsafe {
+            std::env::set_var("INDEXER_RPC_URL", "https://env-override-rpc.com");
+            std::env::set_var("INDEXER_POLL_INTERVAL_MS", "100");
+        }
+        let toml_data = r#"
+            rpc_url = "https://custom-rpc.com"
+            poll_interval_ms = 250
+        "#;
+        let config = IndexerConfig::load_from_str_and_env(Some(toml_data))
+            .expect("Failed to load layered config");
+        assert_eq!(config.rpc_url, "https://env-override-rpc.com");
+        assert_eq!(config.poll_interval_ms, 100);
+        unsafe {
+            std::env::remove_var("INDEXER_RPC_URL");
+            std::env::remove_var("INDEXER_POLL_INTERVAL_MS");
+        }
+    }
+}
+```
+
+**Why this & why not that:**
+- `ConfigFile` with `Option<T>` fields: Partial TOML configuration files deserialize cleanly without schema validation errors.
+- `toml::from_str`: Fast, zero-allocation declarative parsing into structured types via Serde.
+- `unsafe { std::env::set_var(...) }`: Required in Rust Edition 2024 because process environment modification is not thread-safe in POSIX/C libc runtimes.
+- `load_from_str_and_env` with 3-tier layering: Defaults -> TOML File -> Env Vars guarantees 12-factor cloud deployment readiness without code recompilation.
+
+**Compared to your attempt:**
+- **Matches:** Everything! Struct schema, `from_toml_str` implementation, sequential precedence matching in `load_from_str_and_env`, `INDEXER_TARGET_PROGRAM` env check, Edition 2024 `unsafe` blocks in tests, and all unit tests passing.
+- **Difference:** None! You even proactively added `INDEXER_TARGET_PROGRAM` to make the configuration system 100% symmetric.
+
+
 
 

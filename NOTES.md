@@ -63,3 +63,7 @@
 #### Represent a single point-in-time snapshot of an on-chain account. Store its 32 byte address its owning proram its lamport balance , the raw byte vector and the block slot. Provide a clean constructor to instantiate it and a helper to calculate its human readable SOL balance (diving lamports by 1,000,000,000)
 
 
+This is how you run test cases sequentially by default it runs parallely
+```cargo test -- --test-threads=1```
+
+Done all test passed . let's move to [next](recipe;file:///c%3A/Dev/Rust-Projects/rust-indexer/.agents/workflows/next.md)  first marking then next thing and don't forget about social and follow all the [RULES.md](file;file:///c%3A/Dev/Rust-Projects/rust-indexer/RULES.md) 

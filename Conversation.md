@@ -104,6 +104,19 @@
   - Prompts and logs must be systematically updated with each workflow step.
 - **Next Action**: Awaiting learner approval and review of Exercise 1.3b skeleton before hands-on implementation.
 
+---
+
+### 2026-10-08 — Module 1.3 Completed & Audited: Configuration System
+
+- **Topic**: Full completion and verification of Module 1.3 (`IndexerConfig`, `ConfigFile`, TOML parsing, and layered environment variable overrides).
+- **Milestone Update**:
+  - Learner successfully coded, verified, and tested `ConfigFile` deserialization and `load_from_str_and_env` in [src/config.rs](file:///c:/Dev/Rust-Projects/rust-indexer/src/config.rs).
+  - All 4 unit tests passing: default/custom configs, TOML string parsing, partial TOML overriding defaults, and environment variables overriding both TOML and defaults.
+  - Explored and resolved Rust Edition 2024 concurrency safety around `unsafe { std::env::set_var(...) }` and parallel test isolation.
+  - Exercise 1.3b marked `Status: solved` in [EXERCISES.md](file:///c:/Dev/Rust-Projects/rust-indexer/EXERCISES.md). Reference implementation and syntax breakdown recorded in [SOLUTIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS.md) and [SOLUTIONS_EXPLANATIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS_EXPLANATIONS.md).
+  - Module 1.3 audited per Rule 14 and marked `[x]` in [LEARNING.md](file:///c:/Dev/Rust-Projects/rust-indexer/LEARNING.md) and [ROADMAP.md](file:///c:/Dev/Rust-Projects/rust-indexer/ROADMAP.md).
+- **Next Action**: Two-step boundary enforced (Rule 23). Awaiting learner confirmation to initiate Module 1.4 (`CLI Interface: The Indexer Terminal`).
+
 
 
 
