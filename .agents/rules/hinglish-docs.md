@@ -18,7 +18,7 @@ Technical blockchain and systems programming concepts in Solana and Rust can eas
    - Every module's Hinglish entry must cover these standardized components:
      1. **Overview: Big Picture** (Kyun chahiye ye component, system context me kahan fit hota hai).
      2. **Goal of this Step** (Exact deliverables: structs, methods, traits, tests).
-     3. **Domain Analogy & Engineering Concept** (Relatable ledger/cataloguing/clearinghouse intuition).
+     3. **Intuition & Engineering Concept (Solana & Rust Reality + Real-Life Dev Blend)** (Must NEVER be a detached generic metaphor like librarians, ports, or banks repeated from ELI5. Ground it directly in **real-life developer workflows + Solana cluster realities + Rust engineering mechanics** — e.g. local test-validator vs teammate sharing vs production Docker/Helius RPCs, rate limits, slot lag, zero-cost abstractions).
      4. **Data Model** (Core struct/enum code snippet; ASCII diagrams remain in English only).
      5. **Plain Thought Translation** (Dimaag me implementation thought process).
      6. **Skeleton TODO Guide** (Har TODO ka meaning aur implementation guidelines).

@@ -7,6 +7,25 @@
 ## 2026-10-07
 
 <details>
+<summary>2026-10-07 — hinglish-docs.md, .agents/rules/hinglish-docs.md, RULES.md, .agents/workflows/next.md — Ground Hinglish Intuition in Real-World Solana & Rust Dev Reality</summary>
+
+**Before:**
+- `hinglish-docs.md` Section 8 used a generic maritime port / customs house ELI5 analogy translated to Hinglish ("The Harbor Customs Clearing Rules").
+- `.agents/rules/hinglish-docs.md`, `RULES.md` (Rule 24), and `.agents/workflows/next.md` (Step 3 Item 11) permitted generic domain analogies in Hinglish docs.
+
+**After:**
+- `hinglish-docs.md`: Rewrote Section 8 title and `### 📖 Intuition & Engineering Concept` to **Local Dev Se Production Cluster Tak Ka Safar (3-Tier Config)**, grounding intuition directly in:
+  1. Local development with `solana-test-validator` (`127.0.0.1:8899`) and local `config.toml`.
+  2. Teammate zero-setup fallback via Rust `Default` trait (`IndexerConfig::default()`).
+  3. Production cloud/Docker container deployment with secret Helius/QuickNode RPC keys injected via `INDEXER_RPC_URL` environment variables without code recompilation.
+- `.agents/rules/hinglish-docs.md`: Updated component 3 to strictly mandate grounding in real-life developer workflows, Solana cluster realities, and Rust mechanics rather than detached metaphors.
+- `RULES.md`: Updated Rule 24 with explicit requirement that Hinglish intuition must never repeat detached metaphors from ELI5, but directly unite real-life dev workflows with Solana/Rust realities.
+- `.agents/workflows/next.md`: Aligned Step 3 Item 11 with the same requirement.
+
+**Why:** User explicitly requested that Hinglish intuition & engineering concepts connect directly to real-life developer workflows and Solana/Rust concepts, avoiding redundant translations of abstract ELI5 stories.
+</details>
+
+<details>
 <summary>2026-10-07 — social.md, PROMPTS.md, Conversation.md — Add Module 1.3b Social Content & Update Workflow Gate Logging</summary>
 
 **Before:**
