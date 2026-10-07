@@ -7,6 +7,24 @@
 ## 2026-10-07
 
 <details>
+<summary>2026-10-07 — EXERCISES.md, EXAMPLES.md, Rust-Decisions.md, hinglish-docs.md — Initiate Exercise 1.2c (DecodedInstruction & Algebraic Enums)</summary>
+
+**Before:**
+- `EXERCISES.md` had no open exercise.
+- `EXAMPLES.md` ended at Concept 1.2b.
+- `Rust-Decisions.md` ended at Module 1.2b.
+- `hinglish-docs.md` had Sections 1 to 5.
+
+**After:**
+- Added Exercise 1.2c skeleton (`DecodedInstruction` and `InstructionPayload` algebraic enum) to `EXERCISES.md` under `## Open / In-Progress`.
+- Added Concept 1.2c ELI5 (The Itemized Dispatch Voucher) and technical breakdown to `EXAMPLES.md`.
+- Added Module 1.2c Rust decisions (`InstructionPayload` algebraic enum, `Vec<Pubkey>`, `match` exhaustiveness) to `Rust-Decisions.md`.
+- Added Section 5 for Module 1.2c and updated Systems Cheatsheet (Section 6) in `hinglish-docs.md`.
+
+**Why:** Resumed Module 1.2 via `/next` after learner authorized progress and requested advancement to next exercise per Rule 6, 8, 11, 20, 24, and Step 3.5.
+</details>
+
+<details>
 <summary>2026-10-07 — SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md — Record Solution 1.2b and mark Exercise 1.2b solved</summary>
 
 **Before:**

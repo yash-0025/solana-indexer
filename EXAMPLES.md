@@ -44,6 +44,17 @@
 **Technical explanation:**
 > On Solana, state updates are executed via transactions. Each transaction is signed by one or more private keys, producing a primary 64-byte Ed25519 signature (`solana_sdk::signature::Signature`) that uniquely identifies the transaction across the entire cluster. When the cluster confirms a block, validators record the ledger slot number (`slot: u64`), an estimated Unix timestamp (`block_time: Option<i64>`), and whether execution succeeded without runtime error (`success: bool`). In an indexer, transactions must be tracked as first-class domain entities (`TransactionRecord`) independently of individual account updates. Modeling `block_time` as `Option<i64>` reflects the on-chain reality that timestamps are approximate cluster estimates and can occasionally be `None`. Implementing `std::fmt::Display` provides human-friendly terminal formatting (shortening the 64-byte signature to `abc...xyz`), while `#[derive(Debug)]` remains available for internal logging.
 
+---
+
+### 1.2c — Instruction Modeling: DecodedInstruction & Enums (The Itemized Dispatch Voucher)
+
+**ELI5 (domain analogy):**
+> Imagine an auditor at a clearinghouse who has verified the top-level wire transfer receipt (`TransactionRecord`). The receipt proves that money moved, but it does not reveal *what specific business operations* took place inside. Attached to the wire receipt is an **itemized dispatch voucher**: it specifies which processing department was invoked (the program ID), lists every customer account touched by the operation, and contains a categorized action slip. The action slip uses distinct colored forms—a green voucher for a direct transfer of funds with a stated amount, or a blue form for an unclassified raw administrative memo. In our indexer, `DecodedInstruction` is that itemized dispatch voucher, using Rust algebraic enums to categorize and strongly type the exact payload.
+
+**Technical explanation:**
+> Within a Solana transaction, execution logic is composed of one or more instructions processed atomically by validator runtimes. Each instruction targets an executable on-chain program (`program_id: Pubkey`), passes an ordered list of account references (`accounts: Vec<Pubkey>`), and delivers an instruction payload. To model instruction payloads cleanly in Rust without resorting to untyped strings or dynamic JSON objects, we utilize an algebraic data type (`enum InstructionPayload`). In Rust, enums can embed different data shapes inside each variant—such as `Transfer { amount: u64 }` for structured payments, or `Raw(Vec<u8>)` for unparsed or arbitrary contract calls. Modeling instructions via `DecodedInstruction` decouples transaction-level metadata from program-level logic, allowing downstream indexing pipelines to match exhaustively on payload variants with zero runtime reflection overhead.
+
+
 
 
 

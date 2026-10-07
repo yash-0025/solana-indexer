@@ -38,7 +38,92 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
-*(none currently open — awaiting module audit & approval)*
+### Exercise 1.2c (Day 1) — Instruction Modeling: DecodedInstruction & Algebraic Enums
+**Status:** open
+**Goal:** Define `DecodedInstruction` and `InstructionPayload` algebraic enum with constructor, helper methods, `Display` formatting, and unit tests.
+
+**Skeleton:**
+```rust
+use solana_sdk::pubkey::Pubkey;
+use std::fmt;
+
+/// Represents the payload of a decoded instruction.
+/// Demonstrates enums as algebraic data types carrying variant-specific data.
+#[derive(Debug, Clone, PartialEq)]
+pub enum InstructionPayload {
+    /// A transfer of funds with an explicit amount in lamports.
+    Transfer { amount: u64 },
+    /// An arbitrary program invocation with raw payload bytes.
+    Raw(Vec<u8>),
+}
+
+/// Represents an instruction executed within a transaction.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DecodedInstruction {
+    pub program_id: Pubkey,
+    pub accounts: Vec<Pubkey>,
+    pub payload: InstructionPayload,
+}
+
+impl DecodedInstruction {
+    /// Creates a new `DecodedInstruction`.
+    pub fn new(program_id: Pubkey, accounts: Vec<Pubkey>, payload: InstructionPayload) -> Self {
+        // TODO(1): Construct and return `Self`
+        todo!()
+    }
+
+    /// Returns the number of accounts involved in this instruction.
+    pub fn account_count(&self) -> usize {
+        // TODO(2): Return `self.accounts.len()` without a trailing semicolon
+        todo!()
+    }
+}
+
+impl fmt::Display for DecodedInstruction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let prog_str = self.program_id.to_string();
+        let short_prog = if prog_str.len() > 16 {
+            format!("{}...{}", &prog_str[..8], &prog_str[prog_str.len() - 8..])
+        } else {
+            prog_str
+        };
+
+        match &self.payload {
+            InstructionPayload::Transfer { amount } => {
+                write!(f, "Instruction [{}]: Transfer {} lamports across {} accounts", short_prog, amount, self.accounts.len())
+            }
+            InstructionPayload::Raw(bytes) => {
+                write!(f, "Instruction [{}]: Raw ({} bytes) across {} accounts", short_prog, bytes.len(), self.accounts.len())
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_decoded_instruction_transfer_and_display() {
+        let program_id = Pubkey::new_unique();
+        let sender = Pubkey::new_unique();
+        let receiver = Pubkey::new_unique();
+        let accounts = vec![sender, receiver];
+        let payload = InstructionPayload::Transfer { amount: 500_000 };
+
+        let ix = DecodedInstruction::new(program_id, accounts, payload);
+
+        assert_eq!(ix.account_count(), 2);
+        let display = format!("{}", ix);
+        assert!(display.contains("Transfer 500000 lamports"));
+        assert!(display.contains("across 2 accounts"));
+    }
+}
+```
+
+**Constraints:** Maintain enum variant data payloads; ensure exhaustive `match` handling in `Display`.
+**Hints used:** 0/3
+**My attempt:** *(paste here when ready, even if broken/partial)*
 
 ---
 

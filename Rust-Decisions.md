@@ -59,6 +59,22 @@
 - **Why `Display`**: Formats the transaction into user-friendly CLI output (e.g., truncating the 88-char signature into `abc...xyz` with status badge) when printed with `{}`.
 - **Why `Debug`**: Intended for developers and internal tracing/logging with `{:?}`, dumping full raw field data.
 
+---
+
+### Module 1.2c — Instruction Modeling: DecodedInstruction & Algebraic Enums
+
+#### 1. `enum InstructionPayload` (Algebraic Data Types) vs Untyped JSON
+- **Why Algebraic Enums**: In Rust, enums can carry distinct structured data within each variant (e.g. `Transfer { amount: u64 }` vs `Raw(Vec<u8>)`). They have zero dynamic dispatch overhead, no runtime type reflection, and enforce compile-time exhaustive `match` handling across the entire indexer.
+- **Why not `serde_json::Value`**: Dynamic JSON requires serialization/deserialization overhead on every access, allocates unpredictably on the heap, and turns missing schema errors into silent runtime failures instead of compile-time guarantees.
+
+#### 2. `Vec<Pubkey>` vs Fixed Array `[Pubkey; N]` for `accounts`
+- **Why `Vec<Pubkey>`**: Solana instructions accept an arbitrary number of account addresses (a basic transfer might reference 3 accounts, whereas an atomic DEX route might reference 20+ accounts). A heap-allocated `Vec<Pubkey>` dynamically adapts to any instruction size without arbitrary bounds.
+- **Why not `[Pubkey; N]`**: Fixed arrays force you to pick an arbitrary upper limit (like 32), wasting stack space on small instructions and failing when an instruction exceeds the cap.
+
+#### 3. Match Exhaustiveness in `Display`
+- **Why `match &self.payload`**: Rust requires every enum variant to be handled explicitly. When new instruction types (e.g., `Mint`, `Burn`, `Swap`) are added later, the compiler will refuse to compile until every `match` block is updated, preventing silent display bugs.
+
+
 
 
 
