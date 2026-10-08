@@ -79,10 +79,10 @@ Every module has:
 ---
 
 ### Module 1.5 — Error Handling: When RPC Calls Fail
-- [ ] **You build:** A custom `IndexerError` enum covering: `RpcError`, `DecodeError`, `AccountNotFound`, `InvalidPubkey`, `RateLimited`, `ConfigError`, `StorageError`. Propagation through the entire call stack.
-- [ ] **Concepts:** `Result<T, E>` as the alternative to exceptions · `?` operator and `From::from` desugaring · `panic!` vs `Result` · Custom error enums with `thiserror` · `anyhow` for application-level errors · `From`/`Into` for error conversion · Why `unwrap()`/`expect()` in an indexer's hot path is especially dangerous — one bad account silently killing the whole process
-- [ ] **Architecture:** Error hierarchy design for infra that must never crash on one bad input. How a decode failure on *one* account should degrade to "skip and log", not "take down the indexer".
-- [ ] **Deliverable:** `IndexerError` used across all modules. No `unwrap()` in non-test code. Descriptive errors for every failure path, including RPC timeouts.
+- [x] **You build:** A custom `IndexerError` enum covering: `RpcError`, `DecodeError`, `AccountNotFound`, `InvalidPubkey`, `RateLimited`, `ConfigError`, `StorageError`. Propagation through the entire call stack.
+- [x] **Concepts:** `Result<T, E>` as the alternative to exceptions · `?` operator and `From::from` desugaring · `panic!` vs `Result` · Custom error enums with `thiserror` · `anyhow` for application-level errors · `From`/`Into` for error conversion · Why `unwrap()`/`expect()` in an indexer's hot path is especially dangerous — one bad account silently killing the whole process
+- [x] **Architecture:** Error hierarchy design for infra that must never crash on one bad input. How a decode failure on *one* account should degrade to "skip and log", not "take down the indexer".
+- [x] **Deliverable:** `IndexerError` used across all modules. No `unwrap()` in non-test code. Descriptive errors for every failure path, including RPC timeouts.
 
 ---
 

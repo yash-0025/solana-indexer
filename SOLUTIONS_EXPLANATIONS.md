@@ -123,3 +123,31 @@
 - `pub fn execute_command(cmd: &Commands) -> String`: Dispatches commands via borrowed reference `&Commands`, avoiding ownership transfer.
 - `match cmd { Commands::Account { pubkey } => ..., ... }`: Exhaustive pattern matching. `rustc` enforces at compile time that every variant of `Commands` is explicitly handled.
 - `if let Some(s) = since`: Idiomatically unpacks the optional starting slot for backfill output formatting.
+
+---
+
+### Solution 1.5 — Resilient Error Handling & IndexerError with thiserror
+
+**Plain English Thought Translation:**
+> "Define a strongly-typed error boundary for the indexer so that unexpected failures are handled as structured data rather than thread panics. Distinguish between network timeouts and rate limits (which should trigger retries), corrupted binary account payloads or uninitialized accounts (which should be quarantined, logged, and skipped), and system faults like storage and configuration failures (which should cause graceful shutdown). Use `thiserror` to automatically implement standard error formatting traits without boilerplate, and implement `From<std::io::Error>` so disk errors auto-convert into `StorageError` when using the `?` operator."
+
+**Syntax & Decision Breakdown:**
+- `use thiserror::Error;`: Imports the procedural derive macro `Error` provided by the `thiserror` crate.
+- `#[derive(Error, Debug, PartialEq)]`:
+  - `Error`: Automatically derives `std::fmt::Display` and `std::error::Error` implementations at compile time based on `#[error("...")]` field attributes.
+  - `Debug`: Generates debug representation for logging with `{:?}`.
+  - `PartialEq`: Enables direct comparison (`assert_eq!`) between error variants in test assertions and error classification logic.
+- `pub enum IndexerError`: Defines an algebraic enum representing all domain failure modes across the indexing pipeline.
+- `#[error("RPC client error: {0}")] RpcError(String)`: Tuple-like variant holding an error description string. `{0}` interpolates the first field into the `Display` message.
+- `#[error("Failed to decode account data: {0}")] DecodeError(String)`: Models deserialization failures (e.g. Borsh buffer length mismatch).
+- `#[error("Account not found: {0}")] AccountNotFound(String)`: Models missing or closed Solana accounts for a given Pubkey.
+- `#[error("Invalid public key string: {0}")] InvalidPubkey(String)`: Captures user or RPC Base58 string parsing errors.
+- `#[error("RPC rate limit reached. Retry after backoff")] RateLimited`: Unit variant (zero fields) representing HTTP 429 rate limit responses, avoiding unnecessary heap allocation.
+- `#[error("Configuration error: {0}")] ConfigError(String)`: Captures invalid environment variables or malformed TOML files.
+- `#[error("Storage I/O error: {0}")] StorageError(String)`: Models local disk, checkpoint cursor, or database persistence failures.
+- `impl From<std::io::Error> for IndexerError`:
+  - Implements the standard conversion trait `std::convert::From`.
+  - `IndexerError::StorageError(err.to_string())`: Converts an arbitrary `std::io::Error` into a `StorageError` variant containing the formatted I/O message.
+  - Enables the `?` operator to automatically convert any standard I/O error into `IndexerError` without manual `.map_err()` call sites.
+- `?` operator desugaring: In `let res = mock_fallible_operation(fail)?;`, the `?` operator unpacks `Ok(val)` or returns `Err(From::from(err))` early to the calling function.
+

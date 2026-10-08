@@ -16,7 +16,8 @@
 7. [Module 1.3 — Configuration System: `IndexerConfig` & Ownership (The Telegraph Dispatch Order)](#7-module-13--configuration-system-indexerconfig--ownership-the-telegraph-dispatch-order)
 8. [Module 1.3b — 3-Tier Precedence Configuration Loading & TOML Parsing (Local Dev Se Production Tak Ka Safar)](#8-module-13b--3-tier-precedence-configuration-loading--toml-parsing-local-dev-se-production-tak-ka-safar)
 9. [Module 1.4 — CLI Interface: The Indexer Terminal (The Dispatch Terminal: Subcommands & Command Pattern)](#9-module-14--cli-interface-the-indexer-terminal-the-dispatch-terminal-subcommands--command-pattern)
-10. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#10-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
+10. [Module 1.5 — Error Handling: When RPC Calls Fail (Fault-Tolerant Pipeline & Zero Panic Rule)](#10-module-15--error-handling-when-rpc-calls-fail-fault-tolerant-pipeline--zero-panic-rule)
+11. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#11-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
 
 ---
 
@@ -652,7 +653,99 @@ Agar tum raw `std::env::args()` use karoge, toh string parsing ka spaghetti code
 
 ---
 
-## 10. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
+## 10. Module 1.5 — Error Handling: When RPC Calls Fail (Fault-Tolerant Pipeline & Zero Panic Rule)
+
+### 🛡️ Intuition & Engineering Concept: Production Validator Traffic Se Error Triage Tak (Zero-Panic Policy)
+Real-world production indexer me sabse khatarnak cheez kya hoti hai?  
+**`.unwrap()` ya `.expect()` ka andha use!**
+
+Socho tumhara indexer Solana mainnet ya Helius RPC se 500 blocks per second stream kar raha hai. Database me transactions rapidly commit ho rahi hain, aur live WebSocket connection maintain hai.  
+Ab imagine karo:
+1. **RPC Rate Limit (`RateLimited`)**: Public Devnet ya free-tier RPC ne turant `HTTP 429 Too Many Requests` fek ke maara.
+2. **Corrupted / Partial Payload (`DecodeError`)**: Kisi newly deployed smart contract ne invalid byte length ka data bhej diya jo tumhare Borsh deserializer layout me fit nahi baitha.
+3. **Dead / Uninitialized Account (`AccountNotFound`)**: RPC se kisi closed wallet ya dummy PDA address ko fetch karne ki koshish ki aur response me empty data mila.
+4. **Invalid User Input (`InvalidPubkey`)**: Operator ne CLI me 32-byte address ki jagah 20-character ka typo string type kar diya.
+5. **Disk / Permission Crash (`StorageError`)**: Database ya local checkpoint cursor disk save karte waqt I/O error aa gaya.
+6. **Config Missing (`ConfigError`)**: Environment variable ya TOML parse nahi ho paya.
+
+Agar tumne ingestion loop ke andar likh diya:
+```rust
+let account = rpc_client.get_account(&pubkey).unwrap(); // 💀 MAUT!
+```
+Toh jaise hi ek bad account aayega, Rust thread **PANIC** karega aur poora multi-gigabyte indexer process turant crash ho jayega! In-flight transactions drop ho jayengi aur database out-of-sync ho jayega!
+
+**Production Architecture Ka Golden Rule: Fault Isolation (Error Triage)**:
+- **Transient Network Errors (`RateLimited`, `RpcError`)**: Pipeline ko crash mat karo! Loop me exponential backoff lagao aur retry karo.
+- **Corrupted Account Errors (`DecodeError`, `AccountNotFound`, `InvalidPubkey`)**: Inhe "Quarantine" karo! Warning log print karo ("Skipping bad account at slot X"), us account ko drop karo, aur baaki 999 healthy accounts ko bina rukaawat process hone do.
+- **Fatal Infra Errors (`ConfigError`, `StorageError`)**: Inhe graceful exit ke sath report karo.
+
+`thiserror` crate compile-time macro use karta hai:
+- `#[error("...")]` se clean display strings bante hain.
+- `#[from]` se external errors (jaise `std::io::Error` ya `solana_client::client_error::ClientError`) bina kisi manual `.map_err` ke seedha `?` operator se convert ho jate hain!
+
+### 🏗️ Architecture & Data Flow
+
+```text
+ Incoming Solana RPC / Streaming Event:
+                      |
+                      v
+          +-----------------------+
+          | Execution / Ingestion |
+          +-----------------------+
+                      |
+           Result<T, IndexerError>
+                      |
+        +-------------+-------------+
+        |                           |
+     Ok(val)                    Err(err)
+        |                           |
+        v                           v
+  [Pipeline Continues]      +-----------------------+
+                            | Error Classification  |
+                            +-----------------------+
+                             /          |          \
+                            /           |           \
+                 (Transient)       (Corrupted)     (Fatal)
+                RateLimited /      DecodeError /   Storage /
+                 RpcError          InvalidPubkey   ConfigError
+                    |                   |               |
+                    v                   v               v
+             [Exponential        [Quarantine,       [Graceful
+                Retry]          Log & Skip]         Shutdown]
+```
+
+### 💭 Plain Thought Translation (Dimaag Me Code Kaise Sochna Hai)
+> *"Pehle se tay kar lo ki indexer me har failure ek specific type ka hoga. Ek custom `IndexerError` enum banao jisme har case ke liye alag variant ho. `thiserror` use karo taaki har variant ke paas apna insani padhne layak error message ho. Har function se `Result<T, IndexerError>` return karo aur jahan error aaye wahan `?` operator lagao. Kabhi bhi non-test code me `.unwrap()` mat likho taaki ek kharab account poore indexer ko zinda dafan na kar sake."*
+
+### 📝 Skeleton TODO Guide (TODOs Ka Matlab & Implementation Tips)
+1. **`TODO(1)` RpcError Variant**:
+   - `#[error("RPC client error: {0}")] RpcError(String)` define karo.
+2. **`TODO(2)` DecodeError Variant**:
+   - `#[error("Failed to decode account data: {0}")] DecodeError(String)` define karo.
+3. **`TODO(3)` AccountNotFound Variant**:
+   - `#[error("Account not found: {0}")] AccountNotFound(String)` define karo.
+4. **`TODO(4)` InvalidPubkey Variant**:
+   - `#[error("Invalid public key string: {0}")] InvalidPubkey(String)` define karo.
+5. **`TODO(5)` RateLimited Variant**:
+   - `#[error("RPC rate limit reached. Retry after backoff")] RateLimited` define karo.
+6. **`TODO(6)` ConfigError Variant**:
+   - `#[error("Configuration error: {0}")] ConfigError(String)` define karo.
+7. **`TODO(7)` StorageError Variant**:
+   - `#[error("Storage I/O error: {0}")] StorageError(String)` define karo.
+8. **`TODO(8)` `impl From<std::io::Error> for IndexerError`**:
+   - Automatic `From` conversion implement karo jo `std::io::Error` ko `StorageError(e.to_string())` me badal de.
+
+### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
+1. **`thiserror` vs Manual `impl Display` + `impl std::error::Error`:**
+   - Manual likhoge toh 60 lines ka `match self` boilerplate likhna padega. `thiserror` ka `#[error("...")]` macro compile time pe binary code generate kar deta hai with zero runtime overhead.
+2. **`thiserror` (Domain Crate) vs `anyhow` (App Crate):**
+   - `anyhow` error types ko erase kar deta hai (`Box<dyn Error>`). Lekin indexer ko retry logic ke liye check karna padta hai ki error `RateLimited` tha ya nahi! Strongly-typed enum se hi `match err` possible hota hai.
+3. **`#[from]` Trait Desugaring:**
+   - Rust ka `?` operator background me `From::from(err)` call karta hai. Agar hum `From` implement kar dein, toh standard library ka error bina kisi `.map_err()` ke seedha convert ho jata hai.
+
+---
+
+## 11. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
 
 | Component | Humne Kya Use Kiya | Kya Reject Kiya Aur Kyun? (Technical Trade-off) |
 | :--- | :--- | :--- |
@@ -670,6 +763,9 @@ Agar tum raw `std::env::args()` use karoge, toh string parsing ka spaghetti code
 | **CLI Parser API** | `clap` Derive API (`Parser`, `Subcommand`) | `std::env::args()` / Manual builder (Index panics, manual token parsing, no auto `--help`) |
 | **Command Representation**| `enum Commands` (Algebraic data type) | Boolean flags `--account --tx` (ambiguous conflicting flags, fragile validation) |
 | **CLI Option Flags** | `Option<u64>` for `--since` | Sentinel values (e.g. `0` or `u64::MAX`, causes subtle logic bugs) |
+| **Domain Error Modeling** | `thiserror` Typed Enum | `anyhow::Error` (Erases concrete type, blocks variant pattern-matching in retry loops) |
+| **Pipeline Error Safety** | `Result<T, IndexerError>` with `?` | `.unwrap()` / `panic!` (One malformed account kills whole 24/7 background service) |
+| **Error Type Conversion** | `impl From<E> for IndexerError` | Manual `.map_err(...)` boilerplate on every `?` call site |
 
 ---
 *Ye file lagataar update hoti rahegi jaise jaise hum aage ke modules aur advanced multi-stage pipeline banayenge!* 🚀

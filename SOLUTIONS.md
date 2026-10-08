@@ -782,4 +782,116 @@ mod tests {
 **Compared to your attempt:**
 - **Matches:** Exactly identical! You defined `Cli`, `Commands` enum with all 5 variants (`Account`, `Tx`, `Watch`, `Backfill` with `#[arg(long)] since: Option<u64>`, `Stats`), implemented `execute_command` matching exhaustively, wired `pub mod cli;` into `main.rs`, and all 13 workspace tests pass.
 - **Difference:** None! After fixing the `prgoram` typo in the backfill format string, your implementation matched the reference solution 100%.
+
+---
+
+### Solution 1.5 — Resilient Error Handling & IndexerError with thiserror
+
+**Reference implementation:**
+```rust
+use thiserror::Error;
+
+/// Custom error domain for the Solana Indexer pipeline.
+#[derive(Error, Debug, PartialEq)]
+pub enum IndexerError {
+    #[error("RPC client error: {0}")]
+    RpcError(String),
+    #[error("Failed to decode account data: {0}")]
+    DecodeError(String),
+    #[error("Account not found: {0}")]
+    AccountNotFound(String),
+    #[error("Invalid public key string: {0}")]
+    InvalidPubkey(String),
+    #[error("RPC rate limit reached. Retry after backoff")]
+    RateLimited,
+    #[error("Configuration error: {0}")]
+    ConfigError(String),
+    #[error("Storage I/O error: {0}")]
+    StorageError(String),
+}
+
+impl From<std::io::Error> for IndexerError {
+    fn from(err: std::io::Error) -> Self {
+        IndexerError::StorageError(err.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_indexer_error_display_messages() {
+        assert_eq!(
+            IndexerError::RpcError("connection timeout".to_string()).to_string(),
+            "RPC client error: connection timeout"
+        );
+        assert_eq!(
+            IndexerError::DecodeError("invalid borsh length".to_string()).to_string(),
+            "Failed to decode account data: invalid borsh length"
+        );
+        assert_eq!(
+            IndexerError::AccountNotFound("4Nd1m...".to_string()).to_string(),
+            "Account not found: 4Nd1m..."
+        );
+        assert_eq!(
+            IndexerError::InvalidPubkey("bad_key".to_string()).to_string(),
+            "Invalid public key string: bad_key"
+        );
+        assert_eq!(
+            IndexerError::RateLimited.to_string(),
+            "RPC rate limit reached. Retry after backoff"
+        );
+        assert_eq!(
+            IndexerError::ConfigError("missing rpc_url".to_string()).to_string(),
+            "Configuration error: missing rpc_url"
+        );
+        assert_eq!(
+            IndexerError::StorageError("disk full".to_string()).to_string(),
+            "Storage I/O error: disk full"
+        );
+    }
+
+    #[test]
+    fn test_from_io_error_conversion() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "access denied");
+        let indexer_err: IndexerError = io_err.into();
+        assert_eq!(
+            indexer_err,
+            IndexerError::StorageError("access denied".to_string())
+        );
+    }
+
+    #[test]
+    fn test_question_mark_propagation() {
+        fn mock_fallible_operation(fail: bool) -> Result<String, IndexerError> {
+            if fail {
+                Err(IndexerError::RateLimited)
+            } else {
+                Ok("success".to_string())
+            }
+        }
+
+        fn caller(fail: bool) -> Result<String, IndexerError> {
+            let res = mock_fallible_operation(fail)?;
+            Ok(res)
+        }
+
+        assert_eq!(caller(false).unwrap(), "success");
+        assert_eq!(caller(true).unwrap_err(), IndexerError::RateLimited);
+    }
+}
+```
+
+**Why this & why not that:**
+- `#[derive(thiserror::Error)]`: Generates compile-time implementations of `Display` and `std::error::Error` without tedious manual boilerplate.
+- `IndexerError` (typed enum) vs `anyhow::Error`: Callers in an indexing pipeline must pattern-match on failure categories (e.g. retrying `RateLimited` vs quarantining `DecodeError`). Type-erased errors like `anyhow` block clean enum pattern matching.
+- `RateLimited` as unit variant: Rate limiting is an immediate signal requiring exponential backoff; it carries no dynamic payload string, avoiding unnecessary heap allocations.
+- `impl From<std::io::Error> for IndexerError`: Converts underlying disk and file I/O errors into `IndexerError::StorageError` automatically during `?` propagation.
+- Zero `unwrap()` in pipeline code: Replaces panic crashes with graceful `Result<T, IndexerError>` control flow.
+
+**Compared to your attempt:**
+- **Matches:** 100% exact match! You implemented `IndexerError` with all 7 variants, exact display messages matching the test expectations, unit variant for `RateLimited`, `From<std::io::Error>` mapping to `StorageError(err.to_string())`, and all unit tests pass with zero compiler warnings.
+- **Difference:** None! Your implementation in `src/error.rs` passes all 16 tests in the test suite seamlessly.
+
 

@@ -115,7 +115,35 @@
   - Explored and resolved Rust Edition 2024 concurrency safety around `unsafe { std::env::set_var(...) }` and parallel test isolation.
   - Exercise 1.3b marked `Status: solved` in [EXERCISES.md](file:///c:/Dev/Rust-Projects/rust-indexer/EXERCISES.md). Reference implementation and syntax breakdown recorded in [SOLUTIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS.md) and [SOLUTIONS_EXPLANATIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS_EXPLANATIONS.md).
   - Module 1.3 audited per Rule 14 and marked `[x]` in [LEARNING.md](file:///c:/Dev/Rust-Projects/rust-indexer/LEARNING.md) and [ROADMAP.md](file:///c:/Dev/Rust-Projects/rust-indexer/ROADMAP.md).
-- **Next Action**: Two-step boundary enforced (Rule 23). Awaiting learner confirmation to initiate Module 1.4 (`CLI Interface: The Indexer Terminal`).
+- **Next Action**: Two-step boundary enforced (Rule 23). Initiated Module 1.4 (`CLI Interface: The Indexer Terminal`).
+
+---
+
+### 2026-10-08 — Module 1.4 Completed & Audited: CLI Interface & Subcommands with Clap Derive
+
+- **Topic**: Full completion and verification of Module 1.4 (`Cli`, `Commands` enum with `account`, `tx`, `watch`, `backfill --since`, `stats`, and command dispatch).
+- **Milestone Update**:
+  - Learner successfully implemented `Cli`, `Commands`, and `execute_command` in [src/cli.rs](file:///c:/Dev/Rust-Projects/rust-indexer/src/cli.rs).
+  - All 13 tests passing cleanly across the workspace.
+  - Exercise 1.4 marked `Status: solved` in [EXERCISES.md](file:///c:/Dev/Rust-Projects/rust-indexer/EXERCISES.md). Reference implementation and syntax breakdown recorded in [SOLUTIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS.md) and [SOLUTIONS_EXPLANATIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS_EXPLANATIONS.md).
+  - Social journey content generated in [social.md](file:///c:/Dev/Rust-Projects/rust-indexer/social.md) for Module 1.4 in both English and Hinglish (all strictly <= 280 chars).
+  - Module 1.4 audited per Rule 14 and marked `[x]` in [LEARNING.md](file:///c:/Dev/Rust-Projects/rust-indexer/LEARNING.md) and [ROADMAP.md](file:///c:/Dev/Rust-Projects/rust-indexer/ROADMAP.md).
+- **Next Action**: Two-step boundary enforced (Rule 23). Initiated Module 1.5 (`Error Handling: When RPC Calls Fail`).
+
+---
+
+### 2026-10-08 — Module 1.5 Completed & Audited: Error Handling: When RPC Calls Fail
+
+- **Topic**: Full completion and verification of Module 1.5 (`IndexerError` enum, `thiserror`, zero-panic policy, and `From<std::io::Error>`).
+- **Milestone Update**:
+  - Learner successfully implemented `IndexerError` with all 7 domain variants (`RpcError`, `DecodeError`, `AccountNotFound`, `InvalidPubkey`, `RateLimited`, `ConfigError`, `StorageError`) and `From<std::io::Error>` in [src/error.rs](file:///c:/Dev/Rust-Projects/rust-indexer/src/error.rs).
+  - All 16 tests passing cleanly across the workspace (`cargo test -- --test-threads=1`).
+  - Audited codebase for zero `unwrap()` in non-test hot paths.
+  - Exercise 1.5 marked `Status: solved` in [EXERCISES.md](file:///c:/Dev/Rust-Projects/rust-indexer/EXERCISES.md). Reference implementation and syntax breakdown recorded in [SOLUTIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS.md) and [SOLUTIONS_EXPLANATIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS_EXPLANATIONS.md).
+  - Social journey content generated in [social.md](file:///c:/Dev/Rust-Projects/rust-indexer/social.md) for Module 1.5 in both English and Hinglish (all strictly <= 280 chars).
+  - Module 1.5 audited per Rule 14 and marked `[x]` in [LEARNING.md](file:///c:/Dev/Rust-Projects/rust-indexer/LEARNING.md) and [ROADMAP.md](file:///c:/Dev/Rust-Projects/rust-indexer/ROADMAP.md).
+- **Next Action**: Two-step boundary enforced (Rule 23). Module 1.5 complete. Awaiting learner confirmation to initiate Module 1.6 (`Solana RPC Client Fundamentals`).
+
 
 
 

@@ -3010,6 +3010,7 @@ dependencies = [
  "serde",
  "solana-client",
  "solana-sdk",
+ "thiserror",
  "toml 0.8.23",
 ]
 

@@ -7,6 +7,63 @@
 ## 2026-10-08
 
 <details>
+<summary>2026-10-08 — LEARNING.md, ROADMAP.md — Mark Module 1.5 Complete (Error Handling: When RPC Calls Fail)</summary>
+
+**Before:**
+- `LEARNING.md` line 29: `- [ ] 1.5 — Error Handling: When RPC Calls Fail`.
+- `ROADMAP.md` Module 1.5: All 4 items marked `[ ]`.
+
+**After:**
+- `LEARNING.md` line 29: Marked `- [x] 1.5 — Error Handling: When RPC Calls Fail`.
+- `ROADMAP.md` Module 1.5: Checked off all 4 items `[x]`.
+
+**Why:** Learner confirmed completion of Module 1.5 after thorough verification confirmed that all roadmap items, concepts, error variants, `thiserror` derives, `From<std::io::Error>` conversions, and 16/16 tests pass per Rules 1, 2, 14, and 23.
+</details>
+
+<details>
+<summary>2026-10-08 — SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md, src/error.rs, src/main.rs, social.md — Record Solution 1.5 & Social Journey Content</summary>
+
+**Before:**
+- `SOLUTIONS.md`: Ended at Solution 1.4.
+- `SOLUTIONS_EXPLANATIONS.md`: Ended at Solution 1.4.
+- `EXERCISES.md`: Exercise 1.5 was `open` under `## Open / In-Progress`.
+- `src/main.rs`: Did not expose `pub mod error;`.
+- `src/error.rs`: Created with `todo!()` blocks.
+- `social.md`: Ended at Module 1.4 content.
+
+**After:**
+- `SOLUTIONS.md`: Appended Solution 1.5 reference implementation, "why this & why not that", and comparison with learner's passing attempt.
+- `SOLUTIONS_EXPLANATIONS.md`: Appended Solution 1.5 plain English thought translation and exhaustive syntax breakdown.
+- `EXERCISES.md`: Moved Exercise 1.5 to `## Solved` with learner's verified attempt; set `## Open / In-Progress` to empty.
+- `src/main.rs`: Added `pub mod error;`.
+- `src/error.rs`: Fully implemented `IndexerError` with 7 variants, `From<std::io::Error>`, and tests passing.
+- `social.md`: Added Module 1.5 social journey content (English standalone + 4-tweet thread on Fault Isolation & `thiserror`; Hinglish standalone + 4-tweet thread on Solana RPC HTTP 429 rate limit triage & zero-panic rule; all strictly <= 280 chars).
+
+**Why:** Learner verified all 16 workspace tests pass for Exercise 1.5. Recorded solutions, explanations, and social journey content per Rules 2, 19, 20, 25, and Step 3.5-D.
+</details>
+
+<details>
+<summary>2026-10-08 — Cargo.toml, EXAMPLES.md, Rust-Decisions.md, EXERCISES.md, hinglish-docs.md — Initiate Concept 1.5 (Error Handling & IndexerError with thiserror)</summary>
+
+**Before:**
+- `Cargo.toml`: Dependencies lacked `thiserror`.
+- `EXAMPLES.md`: Ended at Concept 1.4.
+- `Rust-Decisions.md`: Ended at Concept 1.4.
+- `EXERCISES.md`: `## Open / In-Progress` was empty.
+- `hinglish-docs.md`: Ended at Section 9 + Cheatsheet as Section 10.
+
+**After:**
+- `Cargo.toml`: Added `thiserror = "1.0"` dependency.
+- `EXAMPLES.md`: Appended Concept 1.5 ELI5 (The Clearinghouse Quarantine & Triage Desk) and technical explanation.
+- `Rust-Decisions.md`: Appended Concept 1.5 decisions (`thiserror` derive vs manual boilerplate, domain vs application errors, `Result` vs panics/unwrap, and `#[from]` conversion desugaring).
+- `EXERCISES.md`: Added Exercise 1.5 skeleton (`IndexerError` with 7 variants, `From<std::io::Error>`, and tests) under `## Open / In-Progress`.
+- `hinglish-docs.md`: Inserted Section 10 for Module 1.5 with full 7-component structure grounded in real Solana RPC error triage, updated TOC, and renumbered Cheatsheet to Section 11.
+
+**Why:** Resumed curriculum via `/next` to start Phase 1 Day 1 Module 1.5 (Error Handling: When RPC Calls Fail) per Rules 2, 6, 8, 11, 12, 13, 15, 17, 20, 24, and Step 3 / 3.5.
+</details>
+
+
+<details>
 <summary>2026-10-08 — LEARNING.md, ROADMAP.md — Mark Module 1.4 Complete (CLI Interface: The Indexer Terminal)</summary>
 
 **Before:**

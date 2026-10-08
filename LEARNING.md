@@ -26,7 +26,7 @@
 - [x] 1.2 — Domain Types: The Language of On-Chain Data
 - [x] 1.3 — Configuration System
 - [x] 1.4 — CLI Interface: The Indexer Terminal
-- [ ] 1.5 — Error Handling: When RPC Calls Fail
+- [x] 1.5 — Error Handling: When RPC Calls Fail
 - [ ] 1.6 — Solana RPC Client Fundamentals
 - [ ] 1.7 — Account & Instruction Decoding
 - [ ] 1.8 — In-Memory Indexing Engine

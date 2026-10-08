@@ -144,3 +144,22 @@
 #### 4. `Option<u64>` for `--since <SLOT>` Argument
 - **Why `Option<u64>`**: Backfilling may either start from a user-specified slot (`--since 1000`) or default to genesis/latest checkpoint if omitted. `clap` automatically maps optional CLI arguments into `None` when the flag is not supplied, eliminating sentinel integer bugs.
 
+---
+
+### Module 1.5 — Error Handling: When RPC Calls Fail
+
+#### 1. `thiserror` Derive vs Manual `std::error::Error` Boilerplate
+- **Why `thiserror`**: `thiserror` provides procedural derive macros (`#[derive(thiserror::Error)]`) that automatically generate `std::fmt::Display` and `std::error::Error` trait implementations at compile time based on declarative `#[error("...")]` format attributes. This provides compile-time formatting checks with zero runtime reflection overhead.
+- **Why not manual `Display` + `Error`**: Implementing `Display` and `Error` manually requires 50+ lines of repetitive `match` boilerplate for every variant, obscuring domain logic and introducing transcription bugs.
+
+#### 2. `thiserror` (Domain Errors) vs `anyhow` (Application Errors)
+- **Why `thiserror` for `IndexerError`**: As an indexing engine and domain crate, callers and upstream pipeline stages (such as RPC retry loops or the checkpoint coordinator) need to match on specific failure modes—distinguishing a transient `RateLimited` error from a non-recoverable `InvalidPubkey` error. `thiserror` creates strongly-typed enums where every variant can be inspected via pattern matching.
+- **Why not `anyhow`**: `anyhow::Error` is a type-erased container (`Box<dyn Error>`). While convenient in CLI binaries or test scripts, type erasure prevents downstream consumers from matching on specific error variants without clumsy runtime downcasting (`err.downcast_ref::<...>()`).
+
+#### 3. Strongly-Typed Enums vs `panic!` / `.unwrap()` in Pipeline Hot Paths
+- **Why `Result<T, IndexerError>`**: Blockchain indexers process continuous, untrusted streaming data. Modeling failures via `Result` guarantees that errors are handled as normal control flow. Non-fatal errors (such as decoding a single malformed account) can be quarantined ("skip and log") without terminating background worker threads.
+- **Why not `.unwrap()` / `panic!`**: Any `.unwrap()` inside the indexing loop will panic the active thread on a bad byte buffer or network timeout, dropping in-flight buffers, corrupting database checkpoint cursors, and crashing the entire indexing service.
+
+#### 4. `#[from]` Attribute for Automatic `From` Trait Desugaring
+- **Why `#[from]`**: Annotating an error field with `#[from]` generates an automatic `impl From<SourceError> for IndexerError`. This enables the `?` operator to transparently convert foreign errors (such as `solana_client::client_error::ClientError` or `std::io::Error`) into `IndexerError` without requiring manual `.map_err(...)` boilerplate across every call site.
+

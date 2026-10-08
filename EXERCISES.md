@@ -38,11 +38,145 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
-*(No open exercises. Ready for Module 1.5.)*
+*(No open exercises. Ready for Module 1.6.)*
 
 ---
 
 ## Solved
+
+### Exercise 1.5 (Day 1) — Resilient Error Handling & IndexerError with thiserror
+**Status:** solved
+**Goal:** Implement the custom `IndexerError` enum covering all 7 required domain variants using `thiserror` attributes and an automatic `From<std::io::Error>` conversion.
+
+**Skeleton:**
+```rust
+use thiserror::Error;
+
+/// Custom error domain for the Solana Indexer pipeline.
+#[derive(Error, Debug, PartialEq)]
+pub enum IndexerError {
+    // TODO(1): Define RpcError with message: #[error("RPC client error: {0}")]
+    //          carrying an inner `String`
+    // TODO(2): Define DecodeError with message: #[error("Failed to decode account data: {0}")]
+    //          carrying an inner `String`
+    // TODO(3): Define AccountNotFound with message: #[error("Account not found: {0}")]
+    //          carrying an inner `String`
+    // TODO(4): Define InvalidPubkey with message: #[error("Invalid public key string: {0}")]
+    //          carrying an inner `String`
+    // TODO(5): Define RateLimited with message: #[error("RPC rate limit reached. Retry after backoff")]
+    //          as a unit variant (no fields)
+    // TODO(6): Define ConfigError with message: #[error("Configuration error: {0}")]
+    //          carrying an inner `String`
+    // TODO(7): Define StorageError with message: #[error("Storage I/O error: {0}")]
+    //          carrying an inner `String`
+}
+
+// TODO(8): Implement From<std::io::Error> for IndexerError
+impl From<std::io::Error> for IndexerError {
+    fn from(err: std::io::Error) -> Self {
+        // Map into IndexerError::StorageError carrying the error display string
+        todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_indexer_error_display_messages() {
+        assert_eq!(
+            IndexerError::RpcError("connection timeout".to_string()).to_string(),
+            "RPC client error: connection timeout"
+        );
+        assert_eq!(
+            IndexerError::DecodeError("invalid borsh length".to_string()).to_string(),
+            "Failed to decode account data: invalid borsh length"
+        );
+        assert_eq!(
+            IndexerError::AccountNotFound("4Nd1m...".to_string()).to_string(),
+            "Account not found: 4Nd1m..."
+        );
+        assert_eq!(
+            IndexerError::InvalidPubkey("bad_key".to_string()).to_string(),
+            "Invalid public key string: bad_key"
+        );
+        assert_eq!(
+            IndexerError::RateLimited.to_string(),
+            "RPC rate limit reached. Retry after backoff"
+        );
+        assert_eq!(
+            IndexerError::ConfigError("missing rpc_url".to_string()).to_string(),
+            "Configuration error: missing rpc_url"
+        );
+        assert_eq!(
+            IndexerError::StorageError("disk full".to_string()).to_string(),
+            "Storage I/O error: disk full"
+        );
+    }
+
+    #[test]
+    fn test_from_io_error_conversion() {
+        let io_err = std::io::Error::new(std::io::ErrorKind::PermissionDenied, "access denied");
+        let indexer_err: IndexerError = io_err.into();
+        assert_eq!(
+            indexer_err,
+            IndexerError::StorageError("access denied".to_string())
+        );
+    }
+
+    #[test]
+    fn test_question_mark_propagation() {
+        fn mock_fallible_operation(fail: bool) -> Result<String, IndexerError> {
+            if fail {
+                Err(IndexerError::RateLimited)
+            } else {
+                Ok("success".to_string())
+            }
+        }
+
+        fn caller(fail: bool) -> Result<String, IndexerError> {
+            let res = mock_fallible_operation(fail)?;
+            Ok(res)
+        }
+
+        assert_eq!(caller(false).unwrap(), "success");
+        assert_eq!(caller(true).unwrap_err(), IndexerError::RateLimited);
+    }
+}
+```
+**Constraints:** Do not change enum variant names or test assertions. Use `thiserror::Error` derive.
+**Hints used:** 0/3
+**My attempt:**
+```rust
+use thiserror::Error;
+
+#[derive(Error, Debug, PartialEq)]
+pub enum IndexerError {
+    #[error("RPC client error: {0}")] 
+    RpcError(String),
+    #[error("Failed to decode account data: {0}")]
+    DecodeError(String),
+    #[error("Account not found: {0}")]
+    AccountNotFound(String),
+    #[error("Invalid public key string: {0}")]
+    InvalidPubkey(String),
+    #[error("RPC rate limit reached. Retry after backoff")]
+    RateLimited,
+    #[error("Configuration error: {0}")]
+    ConfigError(String),
+    #[error("Storage I/O error: {0}")]
+    StorageError(String),
+}
+
+impl From<std::io::Error> for IndexerError {
+    fn from(err: std::io::Error) -> Self {
+        IndexerError::StorageError(err.to_string())
+    }
+}
+```
+
+---
 
 ### Exercise 1.4 (Day 1) — CLI Interface & Subcommands with Clap Derive
 **Status:** solved

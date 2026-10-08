@@ -20,6 +20,109 @@
 
 ## 📅 Day 1 — RPC & Decoding Foundations
 
+### Module 1.5 — Error Handling: When RPC Calls Fail
+
+#### 🌐 English Content — Focus: Why Production Indexers Forbid `.unwrap()` in Ingestion Streams (Fault Isolation & `thiserror` in Rust)
+
+##### Standalone Post (263 chars):
+```text
+The #1 production mistake in blockchain indexers?
+
+Using `.unwrap()` in ingestion loops.
+
+A single malformed account payload panics the worker thread, killing the whole pipeline.
+
+With `thiserror`, domain errors are strongly-typed data: quarantine, log, and keep syncing! 🦀 #RustLang
+```
+
+##### Thread (4 Tweets):
+**Tweet 1/4 (254 chars):**
+```text
+Day 1 (Module 1.5): Building Fault-Tolerant Error Architecture for our Solana Indexer in Rust 🦀
+
+Why `.unwrap()` and `.expect()` in streaming pipelines are architectural suicide.
+
+Here is how we designed a zero-panic error hierarchy with `thiserror` 🧵👇
+```
+
+**Tweet 2/4 (252 chars):**
+```text
+1/ The Danger of Hot-Path Panics:
+When streaming 500 blocks/sec from Solana, you WILL hit rate limits, corrupted Borsh buffers, and uninitialized accounts.
+
+A thread panic aborts the worker, drops in-flight batches, and corrupts database checkpoint cursors!
+```
+
+**Tweet 3/4 (279 chars):**
+```text
+2/ Error Triage (Quarantine vs Retry):
+We categorized `IndexerError` into 3 actionable tiers:
+- Transient (`RateLimited`, `RpcError`): Retry with exponential backoff.
+- Corrupted (`DecodeError`, `InvalidPubkey`): Quarantine, log, and skip!
+- Fatal (`StorageError`, `ConfigError`): Clean shutdown.
+```
+
+**Tweet 4/4 (268 chars):**
+```text
+3/ Ergonomic Conversions with `#[from]`:
+`thiserror` derives `Display` and `std::error::Error` at compile time with zero reflection.
+
+Implementing `From<std::io::Error>` lets the `?` operator auto-convert I/O faults cleanly.
+
+16/16 tests passing! 🚀 #BuildInPublic #Solana #Rust
+```
+
+---
+
+#### 🇮🇳 Hinglish Content — Focus: Solana RPC Rate Limits (HTTP 429) & Developer Traps in Hot Ingestion Paths (Devnet vs Production Triage)
+
+##### Standalone Post (279 chars):
+```text
+Solana indexer production me 24/7 kaise zinda rehta hai? 🛡️
+
+By killing `.unwrap()`!
+
+Ek corrupted account ke aane par agar poora server crash ho jaye toh use indexer nahi, toy project kehte hain.
+
+Aaj banaya `thiserror` triage system: bad data ko quarantine karo, live stream ko chalu rakho! 🦀
+```
+
+##### Thread (4 Tweets):
+**Tweet 1/4 (268 chars):**
+```text
+Day 1 (Module 1.5): Solana Indexer me Zero-Panic Error System build kiya! 🦀
+
+Junior dev har jagah `.unwrap()` chipka deta hai. Lekin jab Helius ya Devnet RPC 429 rate limit deta hai, toh kya indexer ko suicide kar lena chahiye?
+
+Aao samjhata hoon production error triage 🧵👇
+```
+
+**Tweet 2/4 (272 chars):**
+```text
+1/ RPC Reality Check (HTTP 429):
+Public Devnet aur high-speed RPCs rate limit hit hone par connection cut kar dete hain.
+
+Agar `.unwrap()` likha hai, toh thread turant panic karega aur in-flight transactions gayab! Error ko normal control-flow data ki tarah treat karna zaroori hai.
+```
+
+**Tweet 3/4 (278 chars):**
+```text
+2/ The Quarantine Strategy:
+Agar kisi smart contract ne galat byte array bhej diya (`DecodeError`), toh indexer ko band mat karo!
+
+Us specific account ko "quarantine" karke error log karo, skip maaro, aur baaki 999 healthy accounts ko stream hone do. Pipeline uninterrupted rehti hai!
+```
+
+**Tweet 4/4 (272 chars):**
+```text
+3/ `thiserror` Ki Superpower:
+Manual boilerplate likhne ke bajaye `thiserror` compile time pe clean messages aur `From` conversions generate karta hai. `?` operator lagao aur aage badho!
+
+Ab hamara indexer unstoppable ban raha hai! 16 tests green 🚀 #RustLang #Solana #Web3
+```
+
+---
+
 ### Module 1.4 — CLI Interface: The Indexer Terminal
 
 #### 🌐 English Content — Focus: Why We Used Clap Derive & Algebraic Enums for Indexer Subcommands (The Command Pattern in Rust)
