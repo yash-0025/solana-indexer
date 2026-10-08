@@ -3,6 +3,11 @@
 - An indexer does not validate blocks or participate in consensus; it connects downstream to an RPC or validator node, polls or streams raw ledger data, decodes byte buffers into typed domain reprentations and indexes them into storage
 
 
+# WHAT WE CAN BUILD MORE 
+- We can build an auto backfill mechanism as in 1.4 module we are talking about it that when server goes offline we misses alot of data and we have to backfill to keep our database sync with the network.
+
+
+
 #### Architecture 
 ```
 +-----------------------------------------------------------+
@@ -67,3 +72,6 @@ This is how you run test cases sequentially by default it runs parallely
 ```cargo test -- --test-threads=1```
 
 Done all test passed . let's move to [next](recipe;file:///c%3A/Dev/Rust-Projects/rust-indexer/.agents/workflows/next.md)  first marking then next thing and don't forget about social and follow all the [RULES.md](file;file:///c%3A/Dev/Rust-Projects/rust-indexer/RULES.md) 
+
+Let's move to [next](recipe;file:///c%3A/Dev/Rust-Projects/rust-indexer/.agents/workflows/next.md)   and don't forget about social and follow all the [RULES.md](file;file:///c%3A/Dev/Rust-Projects/rust-indexer/RULES.md) 
+

@@ -102,5 +102,24 @@
 - `std::env::var("INDEXER_*")`: Reads operating system environment variables returning `Result<String, VarError>`. Matching on `if let Ok(...)` extracts the value safely without crashing when the variable is unset.
 - `unsafe { std::env::set_var(...) }`: Enforces Rust Edition 2024 concurrency safety discipline in multi-threaded test runners.
 
+---
 
+### Solution 1.4 — CLI Interface & Subcommands with Clap Derive
 
+**Plain English Thought Translation:**
+> "Build the operator's terminal console for the indexer using `clap`. Define a top-level `Cli` parser that delegates to a `Commands` enum. Model each administrative action—auditing an account address, inspecting a transaction receipt, streaming program activity, backfilling missing slots with an optional starting slot number, and checking internal metrics—as a distinct enum variant. Implement a command dispatcher using exhaustive pattern matching to route each command to its respective handler, ensuring the compiler catches any unhandled subcommands."
+
+**Syntax & Decision Breakdown:**
+- `use clap::{Parser, Subcommand};`: Imports the core procedural derive traits from the `clap` crate.
+- `#[derive(Parser, Debug)]`: Derives the top-level command-line parser on `Cli`. Generates command-line flag parsing, `--help` output, and error reporting at compile time with zero runtime reflection.
+- `#[command(name = "rust-indexer", about = "...")]`: Attribute macro setting CLI binary metadata displayed when the user executes `--help` or `--version`.
+- `#[command(subcommand)] pub command: Commands`: Directs `clap` to treat the nested `Commands` enum as CLI subcommands rather than positional arguments or flags.
+- `#[derive(Subcommand, Debug, PartialEq)] pub enum Commands`: Defines an algebraic enum representing mutually exclusive subcommands. `PartialEq` enables direct equality assertions in unit tests.
+- `Account { pubkey: String }`: Positional argument variant. `clap` automatically treats named fields inside a subcommand variant as required positional CLI arguments unless prefixed with `#[arg(long)]` or `#[arg(short)]`.
+- `Tx { signature: String }`: Positional argument capturing an 88-character base58 transaction signature string.
+- `Watch { program_id: String }`: Positional argument capturing the 32-byte target smart contract address.
+- `#[arg(long)] since: Option<u64>`: Explicit attribute specifying that `since` must be passed as a named flag (`--since <SLOT>`). Wrapping in `Option<u64>` signals to `clap` that the flag is optional, automatically converting absent flags to `None` and numeric input into `Some(u64)` with built-in integer parsing validation.
+- `Stats`: Unit variant with zero fields, capturing flag-less parameter-less subcommands (`rust-indexer stats`).
+- `pub fn execute_command(cmd: &Commands) -> String`: Dispatches commands via borrowed reference `&Commands`, avoiding ownership transfer.
+- `match cmd { Commands::Account { pubkey } => ..., ... }`: Exhaustive pattern matching. `rustc` enforces at compile time that every variant of `Commands` is explicitly handled.
+- `if let Some(s) = since`: Idiomatically unpacks the optional starting slot for backfill output formatting.

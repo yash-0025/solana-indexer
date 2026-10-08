@@ -38,11 +38,198 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
-*(No open exercises. Ready for Module 1.4.)*
+*(No open exercises. Ready for Module 1.5.)*
 
 ---
 
 ## Solved
+
+### Exercise 1.4 (Day 1) — CLI Interface & Subcommands with Clap Derive
+**Status:** solved
+**Goal:** Implement the top-level CLI parser struct and Commands enum using Clap derive with subcommands (`account`, `tx`, `watch`, `backfill`, `stats`) and an execution dispatcher.
+
+**Skeleton:**
+```rust
+use clap::{Parser, Subcommand};
+
+/// Solana Real-Time & Historical Blockchain Indexer CLI.
+#[derive(Parser, Debug)]
+#[command(name = "rust-indexer", about = "Solana Real-Time & Historical Blockchain Indexer")]
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Commands,
+}
+
+/// Supported administrative and operational commands for the indexer.
+#[derive(Subcommand, Debug, PartialEq)]
+pub enum Commands {
+    // TODO(1): Define Account subcommand with `pubkey: String` positional argument
+    // TODO(2): Define Tx subcommand with `signature: String` positional argument
+    // TODO(3): Define Watch subcommand with `program_id: String` positional argument
+    // TODO(4): Define Backfill subcommand with `program_id: String` positional argument and optional `#[arg(long)] since: Option<u64>` flag
+    // TODO(5): Define Stats subcommand taking no arguments
+}
+
+/// Dispatches the parsed command to placeholder handlers.
+pub fn execute_command(cmd: &Commands) -> String {
+    // TODO(6): Match exhaustively on `cmd` and return descriptive placeholder strings:
+    // - Commands::Account { pubkey } => format!("Fetching account: {}", pubkey)
+    // - Commands::Tx { signature } => format!("Fetching transaction: {}", signature)
+    // - Commands::Watch { program_id } => format!("Watching program: {}", program_id)
+    // - Commands::Backfill { program_id, since } => if let Some(s) = since { format!("Backfilling program: {} since slot {}", program_id, s) } else { format!("Backfilling program: {} from beginning", program_id) }
+    // - Commands::Stats => "Displaying indexer statistics".to_string()
+    todo!()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cli_account_parsing() {
+        let args = vec!["rust-indexer", "account", "11111111111111111111111111111111"];
+        let cli = Cli::try_parse_from(args).expect("Failed to parse account command");
+        assert_eq!(
+            cli.command,
+            Commands::Account {
+                pubkey: "11111111111111111111111111111111".to_string()
+            }
+        );
+        let output = execute_command(&cli.command);
+        assert_eq!(output, "Fetching account: 11111111111111111111111111111111");
+    }
+
+    #[test]
+    fn test_cli_tx_parsing() {
+        let args = vec!["rust-indexer", "tx", "5Verifysig12345"];
+        let cli = Cli::try_parse_from(args).expect("Failed to parse tx command");
+        assert_eq!(
+            cli.command,
+            Commands::Tx {
+                signature: "5Verifysig12345".to_string()
+            }
+        );
+        let output = execute_command(&cli.command);
+        assert_eq!(output, "Fetching transaction: 5Verifysig12345");
+    }
+
+    #[test]
+    fn test_cli_watch_parsing() {
+        let args = vec!["rust-indexer", "watch", "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"];
+        let cli = Cli::try_parse_from(args).expect("Failed to parse watch command");
+        assert_eq!(
+            cli.command,
+            Commands::Watch {
+                program_id: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA".to_string()
+            }
+        );
+        let output = execute_command(&cli.command);
+        assert_eq!(output, "Watching program: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    }
+
+    #[test]
+    fn test_cli_backfill_parsing() {
+        let args_with_slot = vec![
+            "rust-indexer",
+            "backfill",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "--since",
+            "1500",
+        ];
+        let cli = Cli::try_parse_from(args_with_slot).expect("Failed to parse backfill with slot");
+        assert_eq!(
+            cli.command,
+            Commands::Backfill {
+                program_id: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA".to_string(),
+                since: Some(1500),
+            }
+        );
+        let output = execute_command(&cli.command);
+        assert_eq!(
+            output,
+            "Backfilling program: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA since slot 1500"
+        );
+
+        let args_no_slot = vec![
+            "rust-indexer",
+            "backfill",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        ];
+        let cli_no_slot = Cli::try_parse_from(args_no_slot).expect("Failed to parse backfill without slot");
+        assert_eq!(
+            cli_no_slot.command,
+            Commands::Backfill {
+                program_id: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA".to_string(),
+                since: None,
+            }
+        );
+        let output_no_slot = execute_command(&cli_no_slot.command);
+        assert_eq!(
+            output_no_slot,
+            "Backfilling program: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA from beginning"
+        );
+    }
+
+    #[test]
+    fn test_cli_stats_parsing() {
+        let args = vec!["rust-indexer", "stats"];
+        let cli = Cli::try_parse_from(args).expect("Failed to parse stats command");
+        assert_eq!(cli.command, Commands::Stats);
+        let output = execute_command(&cli.command);
+        assert_eq!(output, "Displaying indexer statistics");
+    }
+}
+```
+**Constraints:** Do not change enum variant names or test assertions. Use `clap` derive macros.
+**Hints used:** 0/3
+**My attempt:**
+```rust
+use clap::{Parser, Subcommand};
+
+#[derive(Parser, Debug)]
+#[command(name = "rust-indexer", about = "Solana Real-Time & Historical Blockchain Indexer")]
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Commands,
+}
+
+#[derive(Subcommand, Debug, PartialEq)]
+pub enum Commands {
+    Account {
+        pubkey: String,
+    },
+    Tx {
+        signature: String,
+    },
+    Watch {
+        program_id: String,
+    },
+    Backfill {
+        program_id: String,
+        #[arg(long)]
+        since: Option<u64>,
+    },
+    Stats,
+}
+
+pub fn execute_command(cmd: &Commands) -> String {
+    match cmd {
+        Commands::Account { pubkey } => format!("Fetching account: {}", pubkey),
+        Commands::Tx { signature } => format!("Fetching transaction {}", signature),
+        Commands::Watch { program_id } => format!("Watching program: {}", program_id),
+        Commands::Backfill { program_id, since } => {
+            if let Some(s) = since {
+                format!("Backfilling program: {} since slot {}", program_id, s)
+            } else {
+                format!("Backfilling program: {} from beginning", program_id)
+            }
+        }
+        Commands::Stats => format!("Displaying indexer statistics"),
+    }
+}
+```
+
+---
 
 ### Exercise 1.3b (Day 1) — 3-Tier Precedence Configuration Loading & TOML Parsing
 **Status:** solved

@@ -71,10 +71,10 @@ Every module has:
 ---
 
 ### Module 1.4 — CLI Interface: The Indexer Terminal
-- [ ] **You build:** A `clap`-based CLI with subcommands: `account <PUBKEY>`, `tx <SIGNATURE>`, `watch <PROGRAM_ID>` (polling loop, built in Module 1.9), `backfill <PROGRAM_ID> --since <SLOT>`, `stats`.
-- [ ] **Concepts:** `clap` derive API · Module system: `mod`, `pub`, `pub(crate)`, file-based modules · `use` imports and re-exports · Visibility rules · Shadowing vs mutation
-- [ ] **Architecture:** Command pattern — how CLIs map to indexer operations. How real indexer CLIs (e.g. a Geyser plugin's admin tool) are structured.
-- [ ] **Deliverable:** Working CLI skeleton accepting all subcommands, printing placeholder responses.
+- [x] **You build:** A `clap`-based CLI with subcommands: `account <PUBKEY>`, `tx <SIGNATURE>`, `watch <PROGRAM_ID>` (polling loop, built in Module 1.9), `backfill <PROGRAM_ID> --since <SLOT>`, `stats`.
+- [x] **Concepts:** `clap` derive API · Module system: `mod`, `pub`, `pub(crate)`, file-based modules · `use` imports and re-exports · Visibility rules · Shadowing vs mutation
+- [x] **Architecture:** Command pattern — how CLIs map to indexer operations. How real indexer CLIs (e.g. a Geyser plugin's admin tool) are structured.
+- [x] **Deliverable:** Working CLI skeleton accepting all subcommands, printing placeholder responses.
 
 ---
 

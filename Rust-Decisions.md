@@ -124,9 +124,23 @@
 #### 4. Mutable Borrow (`&mut config`) for Layered Merging
 - **Why `&mut config`**: Starting with a mutable `IndexerConfig::default()` and mutating its fields sequentially (Defaults → File → Env) keeps the precedence chain linear, understandable, and free of redundant struct re-allocations.
 
+---
 
+### Module 1.4 — CLI Interface & Command Pattern
 
+#### 1. `clap` Derive API (`#[derive(Parser, Subcommand)]`) vs Builder Pattern or `std::env::args()`
+- **Why `derive`**: Rust's procedural derive macros allow you to declare the CLI structure as ordinary Rust structs and enums. Type safety, flag parsing, `--help` output generation, and validation happen automatically at compile time.
+- **Why not `std::env::args()`**: Raw argument arrays require tedious manual string matching, offer zero built-in help text generation, and crash easily on missing flags or malformed inputs.
+- **Why not `clap` Builder Pattern**: The builder pattern (`Command::new("indexer").arg(...)`) is imperative, verbose, and separates the CLI schema definition from the strongly typed data structures used throughout the rest of the application.
 
+#### 2. Subcommands as Algebraic Enums (`enum Commands`)
+- **Why enums**: Every CLI command has distinct arguments—`account` requires a pubkey string, `backfill` accepts an optional `--since` slot flag, while `stats` takes no arguments at all. Rust enums model mutually exclusive subcommands cleanly, and `match` ensures every command is handled exhaustively by the compiler.
+- **Why not boolean flags (`--account --tx`)**: Flags can be passed simultaneously (e.g. `indexer --account ABC --tx XYZ`), creating ambiguous states that require complex validation logic.
 
+#### 3. Module Visibility: `pub(crate)` vs `pub`
+- **Why `pub(crate)`**: Restricts item visibility strictly to modules within our current crate (`rust-indexer`), preventing accidental exposure if the crate is later imported as a library. For top-level types needed in `main.rs`, `pub` or `pub(crate)` allows clean encapsulation.
+- **Why not everything `pub`**: Blanket `pub` leaks internal implementation details and makes refactoring harder by exposing private helper routines across crate boundaries.
 
+#### 4. `Option<u64>` for `--since <SLOT>` Argument
+- **Why `Option<u64>`**: Backfilling may either start from a user-specified slot (`--since 1000`) or default to genesis/latest checkpoint if omitted. `clap` automatically maps optional CLI arguments into `None` when the flag is not supplied, eliminating sentinel integer bugs.
 

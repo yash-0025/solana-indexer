@@ -618,12 +618,168 @@ mod tests {
 - `ConfigFile` with `Option<T>` fields: Partial TOML configuration files deserialize cleanly without schema validation errors.
 - `toml::from_str`: Fast, zero-allocation declarative parsing into structured types via Serde.
 - `unsafe { std::env::set_var(...) }`: Required in Rust Edition 2024 because process environment modification is not thread-safe in POSIX/C libc runtimes.
-- `load_from_str_and_env` with 3-tier layering: Defaults -> TOML File -> Env Vars guarantees 12-factor cloud deployment readiness without code recompilation.
-
 **Compared to your attempt:**
 - **Matches:** Everything! Struct schema, `from_toml_str` implementation, sequential precedence matching in `load_from_str_and_env`, `INDEXER_TARGET_PROGRAM` env check, Edition 2024 `unsafe` blocks in tests, and all unit tests passing.
 - **Difference:** None! You even proactively added `INDEXER_TARGET_PROGRAM` to make the configuration system 100% symmetric.
 
+---
 
+### Solution 1.4 — CLI Interface & Subcommands with Clap Derive
 
+**Reference implementation:**
+```rust
+use clap::{Parser, Subcommand};
+
+/// Solana Real-Time & Historical Blockchain Indexer CLI.
+#[derive(Parser, Debug)]
+#[command(name = "rust-indexer", about = "Solana Real-Time & Historical Blockchain Indexer")]
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Commands,
+}
+
+/// Supported administrative and operational commands for the indexer.
+#[derive(Subcommand, Debug, PartialEq)]
+pub enum Commands {
+    Account {
+        pubkey: String,
+    },
+    Tx {
+        signature: String,
+    },
+    Watch {
+        program_id: String,
+    },
+    Backfill {
+        program_id: String,
+        #[arg(long)]
+        since: Option<u64>,
+    },
+    Stats,
+}
+
+/// Dispatches the parsed command to placeholder handlers.
+pub fn execute_command(cmd: &Commands) -> String {
+    match cmd {
+        Commands::Account { pubkey } => format!("Fetching account: {}", pubkey),
+        Commands::Tx { signature } => format!("Fetching transaction {}", signature),
+        Commands::Watch { program_id } => format!("Watching program: {}", program_id),
+        Commands::Backfill { program_id, since } => {
+            if let Some(s) = since {
+                format!("Backfilling program: {} since slot {}", program_id, s)
+            } else {
+                format!("Backfilling program: {} from beginning", program_id)
+            }
+        }
+        Commands::Stats => format!("Displaying indexer statistics"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cli_account_parsing() {
+        let args = vec!["rust-indexer", "account", "11111111111111111111111111111111"];
+        let cli = Cli::try_parse_from(args).expect("Failed to parse account command");
+        assert_eq!(
+            cli.command,
+            Commands::Account {
+                pubkey: "11111111111111111111111111111111".to_string()
+            }
+        );
+        let output = execute_command(&cli.command);
+        assert_eq!(output, "Fetching account: 11111111111111111111111111111111");
+    }
+
+    #[test]
+    fn test_cli_tx_parsing() {
+        let args = vec!["rust-indexer", "tx", "5Verifysig12345"];
+        let cli = Cli::try_parse_from(args).expect("Failed to parse tx command");
+        assert_eq!(
+            cli.command,
+            Commands::Tx {
+                signature: "5Verifysig12345".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn test_cli_watch_parsing() {
+        let args = vec!["rust-indexer", "watch", "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"];
+        let cli = Cli::try_parse_from(args).expect("Failed to parse watch command");
+        assert_eq!(
+            cli.command,
+            Commands::Watch {
+                program_id: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA".to_string()
+            }
+        );
+        let output = execute_command(&cli.command);
+        assert_eq!(output, "Watching program: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+    }
+
+    #[test]
+    fn test_cli_backfill_parsing() {
+        let args_with_slot = vec![
+            "rust-indexer",
+            "backfill",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+            "--since",
+            "1500",
+        ];
+        let cli = Cli::try_parse_from(args_with_slot).expect("Failed to parse backfill with slot");
+        assert_eq!(
+            cli.command,
+            Commands::Backfill {
+                program_id: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA".to_string(),
+                since: Some(1500),
+            }
+        );
+        let output = execute_command(&cli.command);
+        assert_eq!(
+            output,
+            "Backfilling program: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA since slot 1500"
+        );
+
+        let args_no_slot = vec![
+            "rust-indexer",
+            "backfill",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        ];
+        let cli_no_slot = Cli::try_parse_from(args_no_slot).expect("Failed to parse backfill without slot");
+        assert_eq!(
+            cli_no_slot.command,
+            Commands::Backfill {
+                program_id: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA".to_string(),
+                since: None,
+            }
+        );
+        let output_no_slot = execute_command(&cli_no_slot.command);
+        assert_eq!(
+            output_no_slot,
+            "Backfilling program: TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA from beginning"
+        );
+    }
+
+    #[test]
+    fn test_cli_stats_parsing() {
+        let args = vec!["rust-indexer", "stats"];
+        let cli = Cli::try_parse_from(args).expect("Failed to parse stats command");
+        assert_eq!(cli.command, Commands::Stats);
+        let output = execute_command(&cli.command);
+        assert_eq!(output, "Displaying indexer statistics");
+    }
+}
+```
+
+**Why this & why not that:**
+- `#[derive(Parser, Subcommand)]`: Procedural derive macros generate type-safe command-line parsing, argument validation, and `--help` documentation at compile time without manual string splitting.
+- `enum Commands`: Subcommands are mutually exclusive; modeling them via algebraic enums guarantees only one subcommand can be active per invocation and enables exhaustive `match` handling.
+- `#[arg(long)] since: Option<u64>`: Automatically binds optional long flags (`--since <SLOT>`) into `Some(slot)` or `None` without sentinel integer bugs.
+- `execute_command(&Commands)`: The Command pattern isolates CLI argument parsing from execution logic, allowing clean testability with mock arguments via `try_parse_from`.
+
+**Compared to your attempt:**
+- **Matches:** Exactly identical! You defined `Cli`, `Commands` enum with all 5 variants (`Account`, `Tx`, `Watch`, `Backfill` with `#[arg(long)] since: Option<u64>`, `Stats`), implemented `execute_command` matching exhaustively, wired `pub mod cli;` into `main.rs`, and all 13 workspace tests pass.
+- **Difference:** None! After fixing the `prgoram` typo in the backfill format string, your implementation matched the reference solution 100%.
 

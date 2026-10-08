@@ -7,6 +7,61 @@
 ## 2026-10-08
 
 <details>
+<summary>2026-10-08 — LEARNING.md, ROADMAP.md — Mark Module 1.4 Complete (CLI Interface: The Indexer Terminal)</summary>
+
+**Before:**
+- `LEARNING.md` line 28: `- [ ] 1.4 — CLI Interface: The Indexer Terminal`.
+- `ROADMAP.md` Module 1.4: All 4 items marked `[ ]`.
+
+**After:**
+- `LEARNING.md` line 28: Marked `- [x] 1.4 — CLI Interface: The Indexer Terminal`.
+- `ROADMAP.md` Module 1.4: Checked off all 4 items `[x]`.
+
+**Why:** Learner confirmed completion of Module 1.4 after exhaustive audit verified all roadmap items, concepts, command pattern dispatcher, and 13/13 passing tests per Rules 1, 2, 14, and 23.
+</details>
+
+
+<details>
+<summary>2026-10-08 — social.md, SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md — Record Solution 1.4 & Generate Module 1.4 Social Content</summary>
+
+**Before:**
+- `social.md`: Ended at Module 1.3b content.
+- `SOLUTIONS.md`: Ended at Solution 1.3b.
+- `SOLUTIONS_EXPLANATIONS.md`: Ended at Solution 1.3b.
+- `EXERCISES.md`: Exercise 1.4 open under `## Open / In-Progress`.
+
+**After:**
+- `social.md`: Added Module 1.4 social journey content (English standalone + 4-tweet thread on Clap derive & Algebraic Enums; Hinglish standalone + 4-tweet thread on Operator Debugging Realities & `--since <SLOT>` backfill recovery; all strictly <= 280 chars).
+- `SOLUTIONS.md`: Appended Solution 1.4 reference implementation, "why this & why not that", and comparison with learner's passing attempt.
+- `SOLUTIONS_EXPLANATIONS.md`: Appended Solution 1.4 plain English thought translation and exhaustive syntax breakdown.
+- `EXERCISES.md`: Moved Exercise 1.4 to `## Solved` with learner's verified attempt; set `## Open / In-Progress` to empty.
+
+**Why:** Learner verified all 13 workspace tests pass for Exercise 1.4. Recorded solutions, explanations, and social journey content per Rules 2, 19, 20, 25, and Step 3.5-D.
+</details>
+
+
+<details>
+<summary>2026-10-08 — Cargo.toml, EXAMPLES.md, Rust-Decisions.md, EXERCISES.md, hinglish-docs.md — Initiate Concept 1.4 (CLI Interface & Subcommands with Clap Derive)</summary>
+
+**Before:**
+- `Cargo.toml`: Dependencies had `solana-client`, `solana-sdk`, `serde`, `toml` (lacked `clap`).
+- `EXAMPLES.md`: Ended at Concept 1.3b.
+- `Rust-Decisions.md`: Ended at Concept 1.3b.
+- `EXERCISES.md`: `## Open / In-Progress` was empty.
+- `hinglish-docs.md`: Ended at Section 8 + Cheatsheet as Section 9.
+
+**After:**
+- `Cargo.toml`: Added `clap = { version = "4.5", features = ["derive"] }`.
+- `EXAMPLES.md`: Appended Concept 1.4 ELI5 (The Station Master's Dispatch Telegraph Console) and technical explanation.
+- `Rust-Decisions.md`: Appended Concept 1.4 decisions (`clap` derive API vs builder pattern/`args()`, Enums as subcommands, `pub(crate)` visibility, `Option<u64>` for `--since`).
+- `EXERCISES.md`: Added Exercise 1.4 skeleton (`Cli`, `Commands` enum, and `execute_command` dispatcher) under `## Open / In-Progress`.
+- `hinglish-docs.md`: Inserted Section 9 for Module 1.4 with full 7-component structure grounded in real Solana dev workflows, updated TOC, and renumbered Cheatsheet to Section 10 with CLI parser comparisons.
+
+**Why:** Resumed workflow via `/next` to start Phase 1 Day 1 Module 1.4 (CLI Interface: The Indexer Terminal) per Rules 2, 6, 8, 11, 12, 13, 15, 17, 20, 24, and Step 3 / 3.5.
+</details>
+
+
+<details>
 <summary>2026-10-08 — SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md, LEARNING.md, ROADMAP.md, Conversation.md — Complete & Mark Module 1.3 (Configuration System)</summary>
 
 **Before:**

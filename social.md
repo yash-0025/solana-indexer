@@ -20,6 +20,104 @@
 
 ## 📅 Day 1 — RPC & Decoding Foundations
 
+### Module 1.4 — CLI Interface: The Indexer Terminal
+
+#### 🌐 English Content — Focus: Why We Used Clap Derive & Algebraic Enums for Indexer Subcommands (The Command Pattern in Rust)
+
+##### Standalone Post (255 chars):
+```text
+Why use algebraic enums for CLI subcommands in Rust? 🦀
+
+Instead of untyped flags (`--account --tx`) with endless `if-else` guards, `#[derive(Subcommand)]` enforces mutually exclusive operations at compile time.
+
+Every command carries its own typed parameters. Clean! #RustLang
+```
+
+##### Thread (4 Tweets):
+**Tweet 1/4 (253 chars):**
+```text
+Day 1 (Module 1.4): Building the Operator Terminal for our Solana Indexer in Rust 🦀
+
+How do you design a CLI that handles account audits, tx lookups, and historical backfills cleanly?
+
+Why Rust's Command Pattern + `clap` beats manual argument parsing every time 🧵👇
+```
+
+**Tweet 2/4 (268 chars):**
+```text
+1/ The Flag Spaghetti Problem:
+Ever seen a CLI where passing `--account` AND `--tx` causes an undefined state?
+
+With boolean flags, you need runtime checks to prevent conflicting arguments. With algebraic enums (`enum Commands`), invalid states are unrepresentable at compile time!
+```
+
+**Tweet 3/4 (252 chars):**
+```text
+2/ Typed Subcommand Payloads:
+In `clap`, each enum variant holds its own parameters:
+- `Account { pubkey: String }`
+- `Backfill { program_id: String, since: Option<u64> }`
+
+`clap` parses `--since 1500` into `Some(1500)` or `None` automatically with zero boilerplate.
+```
+
+**Tweet 4/4 (253 chars):**
+```text
+3/ The Command Pattern:
+Our `execute_command` dispatcher uses exhaustive pattern matching. If we add a new command tomorrow, `rustc` refuses to compile until every branch is handled.
+
+13/13 tests green! On to Error Handling (Module 1.5). 🚀 #BuildInPublic #Solana
+```
+
+---
+
+#### 🇮🇳 Hinglish Content — Focus: Operator Debugging Realities in Production & Why Indexers Need Granular CLI Subcommands (Local Validator vs Cluster Forensics)
+
+##### Standalone Post (267 chars):
+```text
+Solana indexer production me fail ho jaye toh debug kaise karoge? 🧐
+
+Sirf logs dekh kar baithne ke bajaye hamne banaya dedicated Operator CLI!
+
+`account`, `tx`, `watch`, aur `--since <SLOT>` backfill subcommands ek hi binary me package ho gaye. Zero headache! 🚀 #Rust #Solana
+```
+
+##### Thread (4 Tweets):
+**Tweet 1/4 (262 chars):**
+```text
+Day 1 (Module 1.4): Solana Indexer me Terminal Interface banaya! 🦀
+
+Bohot log sochte hain indexer bas chupchap background me chalta hai. Lekin real production me bina CLI ke debugging karna andhere me teer chalane jaisa hai!
+
+Kyu indexer ko subcommands chahiye? 🧵👇
+```
+
+**Tweet 2/4 (255 chars):**
+```text
+1/ Ad-hoc State Inspection:
+Jab local validator ya Devnet par koi transaction fail hoti hai, toh browser explorer kholne me 10 second lagte hain.
+
+`rust-indexer account <PUBKEY>` run karo aur terminal par hi raw balance aur state inspect kar lo. Instant feedback loop!
+```
+
+**Tweet 3/4 (264 chars):**
+```text
+2/ Backfill Slot Recovery:
+Agar server 30 minute ke liye offline ho gaya aur 4000 slots chhoot gaye, toh kya poora indexer slot 0 se dubara chalayein?
+
+Nahi! `--since <SLOT>` flag se operator exactly missing slot se historical backfill trigger kar sakta hai. System resilient!
+```
+
+**Tweet 4/4 (258 chars):**
+```text
+3/ Rust Enums Ki Taakat:
+`clap` derive macro ne compile time pe saare commands ko strongly-typed enums me baandh diya. Koi argument missing ho toh binary khud helpful guide print karti hai!
+
+Saare 13 tests passed! Foundations solid ho rahi hain 🛠️ #RustLang #Web3
+```
+
+---
+
 ### Module 1.3 — Configuration System & Ownership Hierarchy (IndexerConfig)
 
 #### 🌐 English Content — Focus: The Hidden Cost of Borrowed Config: Why Lifetimes Viral-Spread in Systems

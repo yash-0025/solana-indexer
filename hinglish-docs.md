@@ -15,7 +15,8 @@
 6. [Module 1.2d — Slot Metadata & Tuple Structs: `SlotInfo` (The Master Ledger Page Header)](#6-module-12d--slot-metadata--tuple-structs-slotinfo-the-master-ledger-page-header)
 7. [Module 1.3 — Configuration System: `IndexerConfig` & Ownership (The Telegraph Dispatch Order)](#7-module-13--configuration-system-indexerconfig--ownership-the-telegraph-dispatch-order)
 8. [Module 1.3b — 3-Tier Precedence Configuration Loading & TOML Parsing (Local Dev Se Production Tak Ka Safar)](#8-module-13b--3-tier-precedence-configuration-loading--toml-parsing-local-dev-se-production-tak-ka-safar)
-9. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#9-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
+9. [Module 1.4 — CLI Interface: The Indexer Terminal (The Dispatch Terminal: Subcommands & Command Pattern)](#9-module-14--cli-interface-the-indexer-terminal-the-dispatch-terminal-subcommands--command-pattern)
+10. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#10-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
 
 ---
 
@@ -575,7 +576,83 @@ pub struct ConfigFile {
 
 ---
 
-## 9. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
+## 9. Module 1.4 — CLI Interface: The Indexer Terminal (The Dispatch Terminal: Subcommands & Command Pattern)
+
+### 💻 Intuition & Engineering Concept: Developer Workflow Se Production Operator Tak Ka Terminal
+Real-world engineering me jab tum ek Solana indexer build karte ho, toh tum sirf `cargo run` karke bhagwan bharose pipeline nahi chhodte!
+
+Socho tumhare samne ek local `solana-test-validator` chal raha hai, ya tum Devnet / Helius Mainnet RPC se connected ho. Ek backend engineer ya devops operator ko din bhar me alag-alag specific tasks karne padte hain:
+1. **Ad-hoc Account Inspection (`account <PUBKEY>`)**: Kisi liquidity pool ya token mint account ka raw data aur current balance instantly check karna bina kisi slow browser explorer ko open kiye.
+2. **Transaction Forensics (`tx <SIGNATURE>`)**: Ek failed swap transaction ko inspect karna ki execution success hui ya error return hua.
+3. **Real-Time Stream Watching (`watch <PROGRAM_ID>`)**: Kisi target smart contract (jaise Raydium ya Orca) ke live account updates ko terminal par real-time listen karna.
+4. **Historical Gap-Filling (`backfill <PROGRAM_ID> --since <SLOT>`)**: Maan lo server restart hone ki wajah se indexer pichhle 30 minutes offline tha aur 4000 slots peeche chhoot gaye. Operator slot `250000000` se historical backfill trigger karta hai taaki database me koi missing gaps na rahein!
+5. **System Telemetry Query (`stats`)**: Kitne accounts decode huye, throughput kya hai, aur memory cache kitna bhara hai, ye dekhna.
+
+Agar tum raw `std::env::args()` use karoge, toh string parsing ka spaghetti code ban jayega: array bounds check karo, missing argument pe panic handle karo, flags manually parse karo.  
+**Rust me hum use karte hain `clap` crate ka Derive API (`Parser`, `Subcommand`)!**  
+`clap` compile-time par procedural macro chalata hai. Tum sirf ek ordinary Rust `enum Commands` define karte ho, aur `clap` automatically:
+- Terminal input ko strongly-typed Rust enums me convert kar deta hai.
+- Beautiful `--help` aur `--version` documentation bina kisi manual formatting ke generate karta hai.
+- Number parsing (jaise `--since 1500` ko `u64` me convert karna) aur missing argument error messages khud handle karta hai. Zero runtime reflection, pure compile-time speed!
+
+### 🏗️ Architecture & Data Flow
+
+```text
+ Terminal User Input:
+ cargo run -- backfill TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA --since 1500
+                         |
+                         v
+          +-------------------------------+
+          |   clap::Parser (Cli::parse)   |
+          |  [ Compile-Time Tokenizer ]   |
+          +-------------------------------+
+                         |
+                         v
+       Strongly-Typed Rust Enum (Commands):
+       Commands::Backfill {
+           program_id: "Tokenkeg...",
+           since: Some(1500)
+       }
+                         |
+                         v
+          +-------------------------------+
+          | execute_command (Dispatcher)  |
+          |  [ Exhaustive match on enum ] |
+          +-------------------------------+
+           /             |               \
+          v              v                v
+   [Backfill Engine] [Live Watcher]  [Single RPC Fetch]
+```
+
+### 💭 Plain Thought Translation (Dimaag Me Code Kaise Sochna Hai)
+> *"Terminal se aane wale arguments ko string arrays me loop karne ke bajaye `clap` ke hawaale kar do. Top-level `Cli` struct define karo jisme `Commands` enum as subcommand wired ho. Enum ke andar har operation ka alag variant banao: `Account`, `Tx`, `Watch`, `Backfill` (optional `--since` slot ke sath), aur `Stats`. Dispatcher function me `match` lagao taaki agar kal ko koi naya subcommand add ho, toh compiler hume force kare usse handle karne ke liye bina kisi unhandled edge case ke."*
+
+### 📝 Skeleton TODO Guide (TODOs Ka Matlab & Implementation Tips)
+1. **`TODO(1)` Account Variant**:
+   - `Account { pubkey: String }` define karo. `pubkey` positional argument ban jayega.
+2. **`TODO(2)` Tx Variant**:
+   - `Tx { signature: String }` define karo.
+3. **`TODO(3)` Watch Variant**:
+   - `Watch { program_id: String }` define karo.
+4. **`TODO(4)` Backfill Variant**:
+   - `Backfill { program_id: String, #[arg(long)] since: Option<u64> }` define karo. Yahan `#[arg(long)]` ka matlab hai `--since <SLOT>` flag banega aur `Option<u64>` hone se user chahe toh pass kare ya na kare!
+5. **`TODO(5)` Stats Variant**:
+   - `Stats` variant bina kisi fields ke.
+6. **`TODO(6)` `execute_command` Dispatcher**:
+   - Exhaustive `match cmd` lagao aur har variant ke liye formatted placeholder string return karo.
+
+### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
+1. **`clap` Derive API vs `std::env::args()`:**
+   - Raw `args()` me agar user argument pass karna bhool jaye, toh `args[2]` turant index out of bounds panic karega!
+   - `clap` derive compile time par syntax generate karta hai aur user ko helpful error message dikhata hai (e.g. `error: the following required arguments were not provided: <PUBKEY>`).
+2. **Subcommands Ke Liye `enum` Kyun?**
+   - Commands mutually exclusive hote hain — ya toh tum backfill karoge ya stats dekhoge, dono ek sath mix nahi ho sakte. Rust ka algebraic `enum` is state ko mathematically perfect express karta hai.
+3. **`Option<u64>` for `--since`:**
+   - Agar user ne `--since` nahi diya, toh value `None` banegi (full history backfill). Agar diya toh `Some(slot)` banegi. Zero sentinel value confusion!
+
+---
+
+## 10. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
 
 | Component | Humne Kya Use Kiya | Kya Reject Kiya Aur Kyun? (Technical Trade-off) |
 | :--- | :--- | :--- |
@@ -590,6 +667,9 @@ pub struct ConfigFile {
 | **Lamport to SOL Math** | `self.lamports as f64 / 1e9` | `u64 / 1e9` (integer truncation drops fractional decimals like `0.5` SOL) |
 | **Constructor Type Alias**| `Self` | Concrete Struct Name (boilerplate, breaks if struct is renamed) |
 | **Process Failure Exit** | `std::process::exit(1)` | Normal return `()` (leaves orchestrator unaware of startup failure) |
+| **CLI Parser API** | `clap` Derive API (`Parser`, `Subcommand`) | `std::env::args()` / Manual builder (Index panics, manual token parsing, no auto `--help`) |
+| **Command Representation**| `enum Commands` (Algebraic data type) | Boolean flags `--account --tx` (ambiguous conflicting flags, fragile validation) |
+| **CLI Option Flags** | `Option<u64>` for `--since` | Sentinel values (e.g. `0` or `u64::MAX`, causes subtle logic bugs) |
 
 ---
 *Ye file lagataar update hoti rahegi jaise jaise hum aage ke modules aur advanced multi-stage pipeline banayenge!* 🚀

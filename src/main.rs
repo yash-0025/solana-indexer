@@ -2,6 +2,7 @@ use solana_client::rpc_client::RpcClient;
 
 pub mod models;
 pub mod config;
+pub mod cli;
 
 
 
