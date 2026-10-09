@@ -4,6 +4,28 @@
 
 ---
 
+## 2026-10-09
+
+<details>
+<summary>2026-10-09 — EXAMPLES.md, Rust-Decisions.md, hinglish-docs.md, EXERCISES.md — Initiate Concept 1.6 (Solana RPC Client Fundamentals & Rate-Limit Backoff)</summary>
+
+**Before:**
+- `EXAMPLES.md`: Ended at Concept 1.5.
+- `Rust-Decisions.md`: Ended at Concept 1.5.
+- `hinglish-docs.md`: Ended at Section 10 + Cheatsheet as Section 11.
+- `EXERCISES.md`: `## Open / In-Progress` was empty.
+
+**After:**
+- `EXAMPLES.md`: Appended Concept 1.6 ELI5 (The Clearinghouse Inter-Branch Courier Window) and technical explanation.
+- `Rust-Decisions.md`: Appended Concept 1.6 decisions (`SolanaRpcClient` wrapper struct, `CommitmentConfig::confirmed()`, exponential backoff math, and generic `FnMut` retry closure).
+- `hinglish-docs.md`: Inserted Section 11 for Module 1.6 with full 7-component structure grounded in Solana RPC 429 triage and commitment forks, updated TOC, and renumbered Cheatsheet to Section 12 with Module 1.6 trade-offs.
+- `EXERCISES.md`: Added Exercise 1.6 skeleton (`SolanaRpcClient` with `new`, `is_rate_limited`, `execute_with_retry`, `get_account`, `get_balance`, and tests) under `## Open / In-Progress`.
+
+**Why:** Resumed curriculum via `/next` to start Phase 1 Day 1 Module 1.6 (Solana RPC Client Fundamentals) per Rules 2, 6, 8, 11, 12, 13, 15, 17, 20, 24, and Step 3 / 3.5.
+</details>
+
+---
+
 ## 2026-10-08
 
 <details>

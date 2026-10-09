@@ -103,4 +103,22 @@
 
 **Technical explanation:**
 > In high-throughput blockchain indexing, system stability depends on strict fault isolation. Unlike client applications that can terminate on an unhandled exception, a production indexer runs continuously over months, ingesting millions of blocks, accounts, and instructions across concurrent threads. Placing `.unwrap()` or `.expect()` inside the hot ingestion path is an anti-pattern: a single malformed account payload or transient network timeout causes a thread panic, terminating the process and leaving indexed database tables in an inconsistent, non-checkpointed state. In Rust, robust error handling is achieved by modeling domain failures as strongly-typed algebraic enums (`#[derive(thiserror::Error)] pub enum IndexerError`). Each failure mode is explicitly categorized: recoverable transient network failures (`RpcError`, `RateLimited`), non-fatal data corruptions (`DecodeError`, `AccountNotFound`, `InvalidPubkey`), and fatal initialization failures (`ConfigError`, `StorageError`). By deriving `thiserror::Error`, Rust automatically implements `std::fmt::Display` and `std::error::Error` with zero runtime overhead, enabling seamless error propagation via the `?` operator and automatic `From` trait conversions.
+
+---
+
+### 1.6 — Solana RPC Client & Resilient Ingestion (The Clearinghouse Inter-Branch Courier Window)
+
+**ELI5 (domain analogy):**
+> Imagine an investigator at a regional bank clearinghouse who needs to look up account ledgers stored at the central reserve vault. The investigator doesn't walk into the vault directly; they walk up to a specialized **Inquiry & Dispatch Window**. You hand the teller an account number (`Pubkey`) and request an official ledger transcript. But the central vault handles thousands of requests per second from all branches, so the window has strict operational rules:
+> 1. You cannot accept uncertified "rumor" slips; you demand transcripts certified with a **Confirmed** or **Finalized** seal so you aren't cataloguing transactions that might get reversed.
+> 2. If the vault teller is overwhelmed and slaps down a red "Too Busy — Return in 30 Seconds" chit (HTTP 429 Rate Limit), you don't throw away your inquiry clipboard and quit your job! You step back, wait with an exponential timer (backoff), and ask again until the teller serves you.
+> 3. When the teller hands over the transcript, you immediately wrap it into your standardized cataloguing card (`AccountSnapshot`) recording the vault's exact ledger cycle number (slot).
+> In our indexer, `SolanaRpcClient` in `src/rpc.rs` is that resilient inquiry window wrapper, protecting the indexer from RPC rate limits and packaging raw cluster responses into our domain types.
+
+**Technical explanation:**
+> In production blockchain indexing, querying on-chain state requires communicating with validator RPC nodes via JSON-RPC. Direct, unmanaged calls to `solana_client::rpc_client::RpcClient` are fragile for three architectural reasons:
+> 1. **Commitment Semantics**: Solana blocks progress through three commitment levels: `processed` (single leader vote, ~400ms, subject to ~5% fork switches), `confirmed` (supermajority 66%+ stake consensus, negligible reorg risk), and `finalized` (31+ confirmed blocks on top, immutable). An indexer must never index at `processed` commitment to avoid saving phantom state from orphaned forks; it must strictly configure `CommitmentConfig::confirmed()` or `CommitmentConfig::finalized()`.
+> 2. **Rate-Limiting (HTTP 429)**: Public and commercial RPC providers enforce aggressive rate limits. When query bursts exceed quotas, the node returns HTTP 429 ("Too Many Requests"). A production indexer must encapsulate `RpcClient` inside a resilient wrapper (`SolanaRpcClient`) that intercepts rate limit errors and applies exponential backoff with retries instead of panicking or failing the ingestion pipeline.
+> 3. **Domain Type Harmonization**: `solana-client` returns raw `solana_sdk::account::Account` and `solana_client::client_error::ClientError`. The wrapper maps these external types into our pipeline's domain models—converting successful `get_account_with_commitment` responses into slot-stamped `AccountSnapshot` models, missing accounts into `IndexerError::AccountNotFound`, and rate-limited failures into `IndexerError::RateLimited`.
+
 

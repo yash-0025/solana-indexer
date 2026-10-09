@@ -38,7 +38,153 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
-*(No open exercises. Ready for Module 1.6.)*
+### Exercise 1.6 (Day 1) — Resilient Solana RPC Client & Rate-Limit Backoff
+**Status:** open
+**Goal:** Implement `SolanaRpcClient` wrapping `solana-client::RpcClient` with `confirmed` commitment, rate-limit detection, exponential backoff retry loop, and account/balance query helpers converting into `AccountSnapshot` and `IndexerError`.
+
+**Skeleton:**
+```rust
+use solana_client::client_error::ClientError;
+use solana_client::rpc_client::RpcClient;
+use solana_sdk::commitment_config::CommitmentConfig;
+use solana_sdk::pubkey::Pubkey;
+use std::time::Duration;
+
+use crate::error::IndexerError;
+use crate::models::account::AccountSnapshot;
+
+/// Resilient RPC client wrapper with built-in retry and backoff logic.
+pub struct SolanaRpcClient {
+    pub client: RpcClient,
+    pub commitment: CommitmentConfig,
+    pub max_retries: u32,
+    pub initial_backoff_ms: u64,
+}
+
+impl SolanaRpcClient {
+    /// Creates a new resilient RPC client with default confirmed commitment and retry settings.
+    pub fn new(rpc_url: &str) -> Self {
+        // TODO(1): Instantiate RpcClient with confirmed commitment, and return Self with:
+        //          - client: RpcClient::new_with_commitment(rpc_url.to_string(), CommitmentConfig::confirmed())
+        //          - commitment: CommitmentConfig::confirmed()
+        //          - max_retries: 3
+        //          - initial_backoff_ms: 500
+        todo!()
+    }
+
+    /// Creates a client with custom commitment and retry parameters.
+    pub fn new_with_config(
+        rpc_url: &str,
+        commitment: CommitmentConfig,
+        max_retries: u32,
+        initial_backoff_ms: u64,
+    ) -> Self {
+        // TODO(2): Instantiate and return Self with provided parameters
+        todo!()
+    }
+
+    /// Determines whether a given `ClientError` represents an HTTP 429 or rate limit response.
+    pub fn is_rate_limited(err: &ClientError) -> bool {
+        // TODO(3): Check if err.to_string().to_lowercase() contains:
+        //          "429", "too many requests", or "rate limit"
+        todo!()
+    }
+
+    /// Executes an RPC operation with exponential backoff retry upon encountering rate limits.
+    pub fn execute_with_retry<T, F>(&self, mut op: F) -> Result<T, IndexerError>
+    where
+        F: FnMut() -> Result<T, ClientError>,
+    {
+        // TODO(4): Loop attempt from 0 to self.max_retries (inclusive):
+        //          - Call op()
+        //          - If Ok(val) => return Ok(val)
+        //          - If Err(e):
+        //              - If Self::is_rate_limited(&e) and attempt < self.max_retries:
+        //                  let backoff = self.initial_backoff_ms * 2u64.pow(attempt);
+        //                  std::thread::sleep(Duration::from_millis(backoff));
+        //                  continue;
+        //              - If Self::is_rate_limited(&e) and attempt == self.max_retries:
+        //                  return Err(IndexerError::RateLimited);
+        //              - Otherwise:
+        //                  return Err(IndexerError::RpcError(e.to_string()));
+        todo!()
+    }
+
+    /// Fetches an account snapshot at the configured commitment, converting it into `AccountSnapshot`.
+    pub fn get_account(&self, pubkey: &Pubkey) -> Result<AccountSnapshot, IndexerError> {
+        // TODO(5): Call self.client.get_account_with_commitment(pubkey, self.commitment)
+        //          inside self.execute_with_retry:
+        //          - If response.value is None => return Err(IndexerError::AccountNotFound(pubkey.to_string()))
+        //          - If response.value is Some(acc) => return Ok(AccountSnapshot::new(
+        //              *pubkey, acc.owner, acc.lamports, acc.data, response.context.slot
+        //            ))
+        todo!()
+    }
+
+    /// Fetches the lamport balance of an account with automatic retry.
+    pub fn get_balance(&self, pubkey: &Pubkey) -> Result<u64, IndexerError> {
+        // TODO(6): Fetch balance via self.client.get_balance(pubkey) inside self.execute_with_retry
+        todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rpc_client_initialization() {
+        let client = SolanaRpcClient::new("https://api.devnet.solana.com");
+        assert_eq!(client.commitment, CommitmentConfig::confirmed());
+        assert_eq!(client.max_retries, 3);
+        assert_eq!(client.initial_backoff_ms, 500);
+    }
+
+    #[test]
+    fn test_rate_limit_detection() {
+        let dummy_io_err = std::io::Error::new(std::io::ErrorKind::Other, "HTTP 429 Too Many Requests");
+        let client_err = ClientError::from(dummy_io_err);
+        assert!(SolanaRpcClient::is_rate_limited(&client_err));
+
+        let normal_io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "entity not found");
+        let normal_client_err = ClientError::from(normal_io_err);
+        assert!(!SolanaRpcClient::is_rate_limited(&normal_client_err));
+    }
+
+    #[test]
+    fn test_execute_with_retry_succeeds_first_try() {
+        let client = SolanaRpcClient::new_with_config(
+            "https://api.devnet.solana.com",
+            CommitmentConfig::confirmed(),
+            3,
+            10,
+        );
+        let res = client.execute_with_retry(|| Ok(42));
+        assert_eq!(res.unwrap(), 42);
+    }
+
+    #[test]
+    fn test_execute_with_retry_exhaustion() {
+        let client = SolanaRpcClient::new_with_config(
+            "https://api.devnet.solana.com",
+            CommitmentConfig::confirmed(),
+            2,
+            5,
+        );
+        let mut attempts = 0;
+        let res: Result<(), IndexerError> = client.execute_with_retry(|| {
+            attempts += 1;
+            let io_err = std::io::Error::new(std::io::ErrorKind::Other, "429 Too Many Requests");
+            Err(ClientError::from(io_err))
+        });
+        assert_eq!(res.unwrap_err(), IndexerError::RateLimited);
+        assert_eq!(attempts, 3);
+    }
+}
+```
+**Constraints:** Do not change struct or method signatures. Keep retry backoff formula exponential.
+**Hints used:** 0/3
+**My attempt:** *(paste here when ready, even if broken/partial)*
 
 ---
 

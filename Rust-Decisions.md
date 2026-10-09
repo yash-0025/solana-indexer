@@ -163,3 +163,24 @@
 #### 4. `#[from]` Attribute for Automatic `From` Trait Desugaring
 - **Why `#[from]`**: Annotating an error field with `#[from]` generates an automatic `impl From<SourceError> for IndexerError`. This enables the `?` operator to transparently convert foreign errors (such as `solana_client::client_error::ClientError` or `std::io::Error`) into `IndexerError` without requiring manual `.map_err(...)` boilerplate across every call site.
 
+---
+
+### Module 1.6 — Solana RPC Client Fundamentals
+
+#### 1. Resilient Wrapper Struct (`SolanaRpcClient`) vs Raw `RpcClient` Everywhere
+- **Why wrapper**: Encapsulates retry policies, default commitment levels, backoff math, and error mapping in one place. Callers throughout the indexer simply call `client.get_account(&pubkey)` without duplicating retry loops across modules.
+- **Why not raw `RpcClient` everywhere**: Using raw `RpcClient` forces every caller to handle HTTP 429s and commitment configs manually, leading to inconsistent error handling and duplicated boilerplate.
+
+#### 2. `CommitmentConfig::confirmed()` vs `processed` or `finalized`
+- **Why `confirmed`**: Strikes the optimal balance for real-time indexers—achieved within ~400–800ms with 66%+ validator stake consensus, making state rollback virtually impossible while avoiding the 32-slot (~13 second) latency of `finalized`.
+- **Why not `processed`**: `processed` represents single-leader slot proposals before supermajority vote; consensus fork switches will leave the indexer with dirty, phantom data.
+
+#### 3. Exponential Backoff (`initial_backoff_ms * 2^attempt`) vs Fixed Sleep
+- **Why exponential backoff**: Dynamically increases delay after repeated rate limits, giving the congested RPC node breathing room to recover without hammering it with fixed-interval thundering herds.
+- **Why not fixed sleep**: Fixed intervals (e.g. 100ms) can cause recurring synchronized spikes that perpetually trigger rate limits.
+
+#### 4. Generic Higher-Order Retry Closure (`execute_with_retry`) vs Duplicated Loops
+- **Why retry closure (`FnMut`)**: A generic retry helper `execute_with_retry<T, F>(&self, mut op: F)` centralizes retry counters, sleep math, and error classification for all RPC operations (`get_account`, `get_balance`, etc.).
+- **Why not loop in every method**: Duplicating while/for loops across every RPC query method violates DRY and makes tuning retry policies error-prone.
+
+

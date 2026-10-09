@@ -17,7 +17,8 @@
 8. [Module 1.3b — 3-Tier Precedence Configuration Loading & TOML Parsing (Local Dev Se Production Tak Ka Safar)](#8-module-13b--3-tier-precedence-configuration-loading--toml-parsing-local-dev-se-production-tak-ka-safar)
 9. [Module 1.4 — CLI Interface: The Indexer Terminal (The Dispatch Terminal: Subcommands & Command Pattern)](#9-module-14--cli-interface-the-indexer-terminal-the-dispatch-terminal-subcommands--command-pattern)
 10. [Module 1.5 — Error Handling: When RPC Calls Fail (Fault-Tolerant Pipeline & Zero Panic Rule)](#10-module-15--error-handling-when-rpc-calls-fail-fault-tolerant-pipeline--zero-panic-rule)
-11. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#11-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
+11. [Module 1.6 — Solana RPC Client Fundamentals: Resilient Wrapper & Rate-Limit Retry (RPC Armor)](#11-module-16--solana-rpc-client-fundamentals-resilient-wrapper--rate-limit-retry-rpc-armor)
+12. [Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"](#12-rust-systems-cheatsheet-ye-kyun-use-kiya-wo-kyun-nahi)
 
 ---
 
@@ -745,7 +746,100 @@ Toh jaise hi ek bad account aayega, Rust thread **PANIC** karega aur poora multi
 
 ---
 
-## 11. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
+## 11. Module 1.6 — Solana RPC Client Fundamentals: Resilient Wrapper & Rate-Limit Retry (RPC Armor)
+
+### 📻 Intuition & Engineering Concept: Solana RPC Rate Limits, Commitment Levels, aur Resilient Client Wrapper
+Pichhle module me humne `IndexerError` banakar error triage ka blueprint taiyar kar liya. Lekin asli warzone kahan hai?  
+**RPC Node ke sath live network interaction me!**
+
+Jab tumhara indexer Solana Devnet ya mainnet-beta se accounts aur transactions fetch karta hai, toh teen sabse bade traps aate hain:
+
+1. **Commitment Level Ka Khel (`processed` vs `confirmed` vs `finalized`):**
+   - **`processed`**: Validator ne transaction execute karke vote daala (~400ms). Lekin ye risky hai! Agar cluster me fork split hua aur doosra fork jeet gaya, toh ye block drop ho jayega (reorg). Agar indexer ne `processed` data database me daal diya, toh database me ghost/fake transactions save ho jayengi!
+   - **`confirmed` (The Sweet Spot! 🎯)**: Supermajority (66%+ active stake) ne is slot par vote de diya hai. Reorg ka chance 0.001% ho jata hai aur data aane me sirf ~400-800ms lagte hain. Production indexers hamesha `confirmed` par read karte hain!
+   - **`finalized`**: 31+ confirmed blocks iske upar build ho chuke hain (Root slot). Ye 100% immutable hai, lekin isme ~13 seconds ka lag hota hai.
+   - *Rule*: Humara indexer `CommitmentConfig::confirmed()` use karega.
+
+2. **HTTP 429 Rate Limit (The Wall of Brick):**
+   - Public Devnet ho ya QuickNode/Helius ka free tier, agar tum ek sath 50 requests bhejoge, RPC node turant connection kaat dega: `429 Too Many Requests`.
+   - Agar tumhara code retry nahi karega, toh har teesri query fail hogi.
+   - Lekin andha retry bhi nahi karna (thundering herd)! Hum use karenge **Exponential Backoff**: pehli baar 500ms ruko, doosri baar 1000ms, teesri baar 2000ms! Isse RPC node ko saans lene ka waqt milta hai.
+
+3. **Thin Wrapper Architecture (`SolanaRpcClient`):**
+   - Raw `RpcClient` ko direct codebase me idhar-udhar use karne ke bajaye hum ek dedicated struct banate hain: `SolanaRpcClient`.
+   - Is wrapper ke paas apna inner client, commitment config, aur retry settings hoti hain.
+   - Jab bhi koi `get_account` call karta hai, wrapper automatically retry loop chalata hai aur raw RPC data ko hamare domain model `AccountSnapshot` me convert karke slot number ke sath lauta deta hai!
+
+### 🏗️ Architecture & Data Flow
+
+```text
+ Pipeline Request: get_account(Pubkey)
+                |
+                v
+  +-----------------------------------------+
+  |  SolanaRpcClient Wrapper                |
+  |  - commitment: confirmed                |
+  |  - max_retries: 3                       |
+  |  - initial_backoff: 500ms               |
+  +-----------------------------------------+
+                |
+                v
+  +-----------------------------------------+
+  |  execute_with_retry(op)                 |
+  +-----------------------------------------+
+      |
+   Attempt 1 ---> [RPC Call] ---> Success? ---> Ok(AccountSnapshot)
+      |                              |
+      | (HTTP 429 / Rate Limit)      v
+      +------------------------> Backoff 500ms
+                                     |
+   Attempt 2 ------------------------+ ---> [RPC Call] ---> Success? ---> Ok(...)
+      |                                                        |
+      | (HTTP 429)                                             v
+      +--------------------------------------------------> Backoff 1000ms
+                                                               |
+   Attempt 3 --------------------------------------------------+ ---> Exhausted?
+                                                                         |
+                                                                         v
+                                                             Err(IndexerError::RateLimited)
+```
+
+### 💭 Plain Thought Translation (Dimaag Me Code Kaise Sochna Hai)
+> *"Raw `RpcClient` ko directly mat chalao; uske upar ek `SolanaRpcClient` ka armor pehnao. Default commitment `confirmed` set karo taaki koi unconfirmed fork ka data index na ho. Ek `execute_with_retry` generic loop banao jo kisi bhi RPC call ko wrap kare. Agar RPC node `429` ya `Too Many Requests` fenkta hai, toh turant panic mat karo; backoff duration calculate karo (`500ms * 2^attempt`), thread ko sleep karao, aur dobara try karo. Jab account mil jaye, toh raw Solana account ko hamare `AccountSnapshot` struct me wrap karke return karo."*
+
+### 📝 Skeleton TODO Guide (TODOs Ka Matlab & Implementation Tips)
+1. **`TODO(1)` Constructor `new(rpc_url: &str)`**:
+   - `RpcClient::new_with_commitment(rpc_url.to_string(), CommitmentConfig::confirmed())` initialize karo.
+   - `commitment: CommitmentConfig::confirmed()`, `max_retries: 3`, `initial_backoff_ms: 500` set karo.
+2. **`TODO(2)` `new_with_config(...)`**:
+   - Custom parameters ke sath `Self` instantiate karo.
+3. **`TODO(3)` `is_rate_limited(err: &ClientError)`**:
+   - Error string ya kind inspect karo: check karo agar message me `"429"`, `"too many requests"`, ya `"rate limit"` aata hai (case-insensitive via `.to_lowercase()`).
+4. **`TODO(4)` `execute_with_retry` Loop**:
+   - Loop `attempt` 0 se `self.max_retries` tak:
+     - `op()` call karo.
+     - `Ok(val)` aaye toh turant `return Ok(val)`.
+     - `Err(e)` aaye: agar rate limited hai aur `attempt < self.max_retries`, toh `initial_backoff_ms * 2u64.pow(attempt)` sleep karke continue karo.
+     - Agar retries exhaust ho gayi aur error rate limited tha, toh `return Err(IndexerError::RateLimited)`.
+     - Doosre errors ke liye `return Err(IndexerError::RpcError(e.to_string()))`.
+5. **`TODO(5)` `get_account`**:
+   - `self.client.get_account_with_commitment(pubkey, self.commitment)` call karo `execute_with_retry` ke andar.
+   - Agar `res.value` `None` hai toh `Err(IndexerError::AccountNotFound(pubkey.to_string()))` return karo.
+   - Agar `Some(acc)` hai toh `AccountSnapshot::new(*pubkey, acc.owner, acc.lamports, acc.data, res.context.slot)` return karo.
+6. **`TODO(6)` `get_balance`**:
+   - `self.client.get_balance(pubkey)` call karo `execute_with_retry` ke andar aur balance return karo.
+
+### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
+1. **`CommitmentConfig::confirmed()` Kyun?**
+   - `processed` pe live read karoge toh block drop hone par database me garbage reh jayega. `finalized` pe padhoge toh 13 seconds late ho jaoge. `confirmed` real-time streaming ke liye industry standard hai (66%+ stake finalized).
+2. **Exponential Backoff vs Fixed Sleep:**
+   - Har baar 200ms rukhna bekar hai jab server heavy load me ho. Backoff (`2^attempt`) se wait time badhta hai (500ms -> 1000ms -> 2000ms), jisse cluster traffic clear ho jata hai.
+3. **Higher-Order Closure (`FnMut`) Ka Jadoo:**
+   - `execute_with_retry` ek higher-order function hai. Har function me alag-alag while loop likhne ki jagah, hum RPC logic closure ke form me pass kar dete hain aur retry engine ek hi jagah rehta hai!
+
+---
+
+## 12. Rust Systems Cheatsheet: "Ye Kyun Use Kiya, Wo Kyun Nahi?"
 
 | Component | Humne Kya Use Kiya | Kya Reject Kiya Aur Kyun? (Technical Trade-off) |
 | :--- | :--- | :--- |
@@ -766,8 +860,13 @@ Toh jaise hi ek bad account aayega, Rust thread **PANIC** karega aur poora multi
 | **Domain Error Modeling** | `thiserror` Typed Enum | `anyhow::Error` (Erases concrete type, blocks variant pattern-matching in retry loops) |
 | **Pipeline Error Safety** | `Result<T, IndexerError>` with `?` | `.unwrap()` / `panic!` (One malformed account kills whole 24/7 background service) |
 | **Error Type Conversion** | `impl From<E> for IndexerError` | Manual `.map_err(...)` boilerplate on every `?` call site |
+| **RPC Client Architecture**| Resilient Wrapper (`SolanaRpcClient`) | Raw `RpcClient` calls (Repeats retry code, no centralized commitment config) |
+| **Commitment Level** | `CommitmentConfig::confirmed()` | `processed` (high fork reorg hazard), `finalized` (13s latency penalty) |
+| **Rate-Limit Retry Backoff**| Exponential Backoff (`2^attempt`) | Fixed Sleep / Busy-wait (Causes thundering herd congestion on RPC endpoint) |
+| **Retry Abstraction** | Generic Closure (`FnMut`) | Duplicate retry loops in each RPC method (Violates DRY, error-prone) |
 
 ---
 *Ye file lagataar update hoti rahegi jaise jaise hum aage ke modules aur advanced multi-stage pipeline banayenge!* 🚀
+
 
 
