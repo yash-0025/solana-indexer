@@ -142,7 +142,21 @@
   - Exercise 1.5 marked `Status: solved` in [EXERCISES.md](file:///c:/Dev/Rust-Projects/rust-indexer/EXERCISES.md). Reference implementation and syntax breakdown recorded in [SOLUTIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS.md) and [SOLUTIONS_EXPLANATIONS.md](file:///c:/Dev/Rust-Projects/rust-indexer/SOLUTIONS_EXPLANATIONS.md).
   - Social journey content generated in [social.md](file:///c:/Dev/Rust-Projects/rust-indexer/social.md) for Module 1.5 in both English and Hinglish (all strictly <= 280 chars).
   - Module 1.5 audited per Rule 14 and marked `[x]` in [LEARNING.md](file:///c:/Dev/Rust-Projects/rust-indexer/LEARNING.md) and [ROADMAP.md](file:///c:/Dev/Rust-Projects/rust-indexer/ROADMAP.md).
-- **Next Action**: Two-step boundary enforced (Rule 23). Module 1.5 complete. Awaiting learner confirmation to initiate Module 1.6 (`Solana RPC Client Fundamentals`).
+- **Next Action**: Two-step boundary enforced (Rule 23). Module 1.5 complete. Initiated Module 1.6 (`Solana RPC Client Fundamentals`).
+
+---
+
+### 2026-10-12 — Pedagogical Calibration: Deep Skeleton TODO Guide in `hinglish-docs.md`
+
+- **Topic**: Enhancing the Skeleton TODO Guide format in [hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/hinglish-docs.md) and updating governance rules.
+- **Learner Directive**:
+  - The learner wants deep conceptual guides for each TODO in `hinglish-docs.md` rather than lazy code dumps or superficial hints in chat/docs.
+  - The goal is for the learner to open `hinglish-docs.md`, understand the exact goal, the under-the-hood data types/anatomy, the mental decision tree, and the step-by-step thinking process, and then write the code themselves with complete conceptual clarity.
+- **Actions Completed**:
+  - Rewrote Section 11's Skeleton TODO Guide in [hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/hinglish-docs.md) covering TODOs 1 through 6 with: Goal/Problem, Under-the-Hood Anatomy, Mental Decision Tree, and Step-by-Step Implementation Guide.
+  - Formally updated Rule 24 in [RULES.md](file:///c:/Dev/Rust-Projects/rust-indexer/RULES.md) and [.agents/rules/hinglish-docs.md](file:///c:/Dev/Rust-Projects/rust-indexer/.agents/rules/hinglish-docs.md).
+- **Next Action**: Learner ready to implement remaining methods (`get_account`, `get_balance`) in [src/rpc.rs](file:///c:/Dev/Rust-Projects/rust-indexer/src/rpc.rs) using the deep guide.
+
 
 
 

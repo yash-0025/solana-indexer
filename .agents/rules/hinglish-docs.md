@@ -21,7 +21,7 @@ Technical blockchain and systems programming concepts in Solana and Rust can eas
      3. **Intuition & Engineering Concept (Solana & Rust Reality + Real-Life Dev Blend)** (Must NEVER be a detached generic metaphor like librarians, ports, or banks repeated from ELI5. Ground it directly in **real-life developer workflows + Solana cluster realities + Rust engineering mechanics** — e.g. local test-validator vs teammate sharing vs production Docker/Helius RPCs, rate limits, slot lag, zero-cost abstractions).
      4. **Data Model** (Core struct/enum code snippet; ASCII diagrams remain in English only).
      5. **Plain Thought Translation** (Dimaag me implementation thought process).
-     6. **Skeleton TODO Guide** (Har TODO ka meaning aur implementation guidelines).
+     6. **Deep Pedagogical Skeleton TODO Guide** (Never provide lazy one-line code dumps or superficial bullet hints. For every single TODO, explicitly provide: (a) Goal & Problem, (b) Under-the-Hood Anatomy of types, RPC structures, and memory layouts, (c) Mental Decision Tree / Logic Flow, and (d) Step-by-Step Implementation Guide that empowers the learner to understand the mechanics and write the code independently).
      7. **Andar Ki Baat (Rust Decisions)** (Why this & why not that trade-offs).
    - Every Hinglish explanation provided must be stored verbatim in `hinglish-docs.md` (no omitting, no paraphrasing, per Rule 20).
    - English teaching sections must ALWAYS be provided in parallel — never skip or substitute English with Hinglish.

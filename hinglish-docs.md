@@ -807,27 +807,60 @@ Jab tumhara indexer Solana Devnet ya mainnet-beta se accounts aur transactions f
 ### 💭 Plain Thought Translation (Dimaag Me Code Kaise Sochna Hai)
 > *"Raw `RpcClient` ko directly mat chalao; uske upar ek `SolanaRpcClient` ka armor pehnao. Default commitment `confirmed` set karo taaki koi unconfirmed fork ka data index na ho. Ek `execute_with_retry` generic loop banao jo kisi bhi RPC call ko wrap kare. Agar RPC node `429` ya `Too Many Requests` fenkta hai, toh turant panic mat karo; backoff duration calculate karo (`500ms * 2^attempt`), thread ko sleep karao, aur dobara try karo. Jab account mil jaye, toh raw Solana account ko hamare `AccountSnapshot` struct me wrap karke return karo."*
 
-### 📝 Skeleton TODO Guide (TODOs Ka Matlab & Implementation Tips)
-1. **`TODO(1)` Constructor `new(rpc_url: &str)`**:
-   - `RpcClient::new_with_commitment(rpc_url.to_string(), CommitmentConfig::confirmed())` initialize karo.
-   - `commitment: CommitmentConfig::confirmed()`, `max_retries: 3`, `initial_backoff_ms: 500` set karo.
-2. **`TODO(2)` `new_with_config(...)`**:
-   - Custom parameters ke sath `Self` instantiate karo.
-3. **`TODO(3)` `is_rate_limited(err: &ClientError)`**:
-   - Error string ya kind inspect karo: check karo agar message me `"429"`, `"too many requests"`, ya `"rate limit"` aata hai (case-insensitive via `.to_lowercase()`).
-4. **`TODO(4)` `execute_with_retry` Loop**:
-   - Loop `attempt` 0 se `self.max_retries` tak:
-     - `op()` call karo.
-     - `Ok(val)` aaye toh turant `return Ok(val)`.
-     - `Err(e)` aaye: agar rate limited hai aur `attempt < self.max_retries`, toh `initial_backoff_ms * 2u64.pow(attempt)` sleep karke continue karo.
-     - Agar retries exhaust ho gayi aur error rate limited tha, toh `return Err(IndexerError::RateLimited)`.
-     - Doosre errors ke liye `return Err(IndexerError::RpcError(e.to_string()))`.
-5. **`TODO(5)` `get_account`**:
-   - `self.client.get_account_with_commitment(pubkey, self.commitment)` call karo `execute_with_retry` ke andar.
-   - Agar `res.value` `None` hai toh `Err(IndexerError::AccountNotFound(pubkey.to_string()))` return karo.
-   - Agar `Some(acc)` hai toh `AccountSnapshot::new(*pubkey, acc.owner, acc.lamports, acc.data, res.context.slot)` return karo.
-6. **`TODO(6)` `get_balance`**:
-   - `self.client.get_balance(pubkey)` call karo `execute_with_retry` ke andar aur balance return karo.
+### 📝 Skeleton TODO Guide (Logic Flow, Types & Syntax Clues)
+
+Yahan har TODO ke liye **concept, Solana mechanics aur syntax clues** diye gaye hain — bina full solution leak kiye — taaki tum khud dimaag lagao aur code likh sako:
+
+#### 🔹 `TODO(1)` & `TODO(2)`: Constructors (`new` & `new_with_config`)
+- **Kaise sochna hai**:
+  - `SolanaRpcClient` ko 4 fields chahiye: `client`, `commitment`, `max_retries`, `initial_backoff_ms`.
+  - Solana ka internal client banane ke liye method use hota hai: `RpcClient::new_with_commitment(url.to_string(), commitment)`.
+  - `new` constructor me bas `new_with_config` ko default values (`CommitmentConfig::confirmed()`, 3, 500) ke sath call kar lo.
+
+---
+
+#### 🔹 `TODO(3)`: Rate-Limit Detection (`is_rate_limited`)
+- **Kaise sochna hai**:
+  - `err.to_string().to_lowercase()` se error string nikalo.
+  - Check karo: `.contains("429") || .contains("too many requests") || .contains("rate limit")`.
+  - Ye function sirf ek `bool` return karega.
+
+---
+
+#### 🔹 `TODO(4)`: Generic Retry Loop (`execute_with_retry`)
+- **Kaise sochna hai**:
+  - Loop chalao: `for attempt in 0..=self.max_retries`.
+  - Har attempt me `op()` call karo.
+  - Agar `Ok(val)` aaye toh turant `return Ok(val)`.
+  - Agar `Err(e)` aaye:
+    - `Self::is_rate_limited(&e)` se check karo: kya ye 429 hai?
+    - Agar 429 hai aur retries bachi hain (`attempt < self.max_retries`):
+      - Backoff calculate karo (`initial_backoff_ms * 2u64.pow(attempt)`).
+      - Thread sleep karao `std::thread::sleep(Duration::from_millis(backoff))` aur `continue` karo.
+    - Agar 429 hai lekin saari retries khatam ho gayi: `return Err(IndexerError::RateLimited)`.
+    - Agar koi aur network error tha: `return Err(IndexerError::RpcError(e.to_string()))`.
+  - End me compiler ko satisfy karne ke liye `Err(IndexerError::RateLimited)`.
+
+---
+
+#### 🔹 `TODO(5)`: Account State Fetcher (`get_account`)
+- **Solana API & Syntax Clues**:
+  - Solana client ka method hai: `self.client.get_account_with_commitment(pubkey, self.commitment)`.
+  - Is call ko retry ke sath chalane ke liye closure use karo: `self.execute_with_retry(|| self.client.get_account_with_commitment(...))?`.
+  - Response ke do important hisse hote hain:
+    - `response.context.slot` $\to$ wo slot (`u64`) jahan snapshot record hua.
+    - `response.value` $\to$ ye ek `Option<Account>` hota hai.
+  - Pattern match karo `response.value` par:
+    - Agar `None` hai $\to$ `Err(IndexerError::AccountNotFound(...))`
+    - Agar `Some(acc)` hai $\to$ `AccountSnapshot::new(...)` bana kar `Ok(...)` return karo!
+
+---
+
+#### 🔹 `TODO(6)`: Lamport Balance Fetcher (`get_balance`)
+- **Solana API & Syntax Clues**:
+  - Solana client ka method: `self.client.get_balance(pubkey)`.
+  - Isme koi `Option` nahi hota, seedha `u64` lamports milte hain.
+  - Isko bas `self.execute_with_retry(|| ...)` closure ke sath call karke result return kar do!
 
 ### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
 1. **`CommitmentConfig::confirmed()` Kyun?**

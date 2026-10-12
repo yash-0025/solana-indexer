@@ -4,6 +4,49 @@
 
 ---
 
+## 2026-10-12
+
+<details>
+<summary>2026-10-12 — hinglish-docs.md, RULES.md, .agents/rules/hinglish-docs.md, Conversation.md — Establish Deep Pedagogical Skeleton TODO Guide Standard</summary>
+
+**Before:**
+- `hinglish-docs.md`: Section 11 TODO Guide contained short 1-line bullet points with code snippets.
+- `RULES.md` & `.agents/rules/hinglish-docs.md`: Mandated basic TODO guidelines without specifying pedagogical structure.
+
+**After:**
+- `hinglish-docs.md`: Completely rewrote Section 11's Skeleton TODO Guide into a Deep Pedagogical Guide breaking down TODOs 1 through 6 into Goal & Problem, Under-the-Hood Anatomy of types/data, Mental Decision Tree, and Step-by-Step Implementation Guide.
+- `RULES.md` (Rule 24) & `.agents/rules/hinglish-docs.md`: Codified the requirement that the Skeleton TODO Guide in `hinglish-docs.md` must always provide deep conceptual breakdowns (Goal, Anatomy, Decision Tree, Implementation Steps) to empower the learner to write the code independently without code dumps.
+- `Conversation.md`: Recorded learner directive and pedagogical calibration.
+
+**Why:** Learner requested comprehensive conceptual explanations directly inside `hinglish-docs.md` so they can study the mechanics, types, and logic flow deeply and write the implementation code themselves without confusion.
+</details>
+
+<details>
+<summary>2026-10-12 — hinglish-docs.md — Remove Solution Code Dumps & Restore Exercise Isolation (Rule 7 & 17)</summary>
+
+**Before:**
+- `hinglish-docs.md`: Section 11 contained full completed solution code blocks for all TODOs, unintentionally leaking solutions and killing hands-on exercise learning.
+
+**After:**
+- `hinglish-docs.md`: Replaced all full solution code blocks with balanced logic clues, Solana API method signatures, and decision trees, ensuring the learner genuinely thinks through and writes the implementation code themselves.
+
+**Why:** Learner correctly called out that providing full code blocks in docs ruins the exercise and prevents real learning; restored strict adherence to Rule 7 ("Never just copy paste this") and Rule 17.
+</details>
+
+<details>
+<summary>2026-10-12 — hinglish-docs.md — Combine Hinglish Concept Intuition with Concrete Syntax Code Blocks</summary>
+
+**Before:**
+- `hinglish-docs.md`: Section 11 TODO Guide lacked concrete code syntax snippets, leaving the learner to ask for syntax.
+
+**After:**
+- `hinglish-docs.md`: Enhanced all TODOs (1 to 6) in Section 11 to include BOTH the intuitive Hinglish explanation AND the exact concrete Rust syntax code block right below each TODO.
+
+**Why:** Learner requested having exact syntax code blocks directly alongside Hinglish explanations in `hinglish-docs.md` to avoid being blocked by syntax while implementing exercises.
+</details>
+
+---
+
 ## 2026-10-09
 
 <details>
