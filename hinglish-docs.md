@@ -854,6 +854,7 @@ Yahan har TODO ke liye **concept, Solana mechanics aur syntax clues** diye gaye 
     - Agar `None` hai $\to$ `Err(IndexerError::AccountNotFound(...))`
     - Agar `Some(acc)` hai $\to$ `AccountSnapshot::new(...)` bana kar `Ok(...)` return karo!
 
+
 ---
 
 #### 🔹 `TODO(6)`: Lamport Balance Fetcher (`get_balance`)
