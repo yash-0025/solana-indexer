@@ -80,4 +80,53 @@ impl SolanaRpcClient {
 }
 
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_rpc_client_initialization() {
+        let client = SolanaRpcClient::new("https://api.devnet.solana.com");
+        assert_eq!(client.commitment, CommitmentConfig::confirmed());
+        assert_eq!(client.max_retries, 3);
+        assert_eq!(client.initial_backoff_ms, 500);
+    }
+    #[test]
+    fn test_rate_limit_detection() {
+        let dummy_io_err = std::io::Error::new(std::io::ErrorKind::Other, "HTTP 429 Too Many Requests");
+        let client_err = ClientError::from(dummy_io_err);
+        assert!(SolanaRpcClient::is_rate_limited(&client_err));
+        let normal_io_err = std::io::Error::new(std::io::ErrorKind::NotFound, "entity not found");
+        let normal_client_err = ClientError::from(normal_io_err);
+        assert!(!SolanaRpcClient::is_rate_limited(&normal_client_err));
+    }
+    #[test]
+    fn test_execute_with_retry_succeeds_first_try() {
+        let client = SolanaRpcClient::new_with_config(
+            "https://api.devnet.solana.com",
+            CommitmentConfig::confirmed(),
+            3,
+            10,
+        );
+        let res = client.execute_with_retry(|| Ok(42));
+        assert_eq!(res.unwrap(), 42);
+    }
+    #[test]
+    fn test_execute_with_retry_exhaustion() {
+        let client = SolanaRpcClient::new_with_config(
+            "https://api.devnet.solana.com",
+            CommitmentConfig::confirmed(),
+            2,
+            5,
+        );
+        let mut attempts = 0;
+        let res: Result<(), IndexerError> = client.execute_with_retry(|| {
+            attempts += 1;
+            let io_err = std::io::Error::new(std::io::ErrorKind::Other, "429 Too Many Requests");
+            Err(ClientError::from(io_err))
+        });
+        assert_eq!(res.unwrap_err(), IndexerError::RateLimited);
+        assert_eq!(attempts, 3);
+    }
+}
+
 
