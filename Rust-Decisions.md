@@ -183,4 +183,17 @@
 - **Why retry closure (`FnMut`)**: A generic retry helper `execute_with_retry<T, F>(&self, mut op: F)` centralizes retry counters, sleep math, and error classification for all RPC operations (`get_account`, `get_balance`, etc.).
 - **Why not loop in every method**: Duplicating while/for loops across every RPC query method violates DRY and makes tuning retry policies error-prone.
 
+#### 5. `TransactionRecord` Domain Model vs Raw RPC Status Wire Types
+- **Why domain mapping**: Mapping `RpcConfirmedTransactionStatusWithSignature` into `TransactionRecord` strips transient wire noise (such as optional confirmation status text and JSON strings) and standardizes the cryptographic Ed25519 `Signature`, slot number, Unix epoch timestamp, and execution success boolean for downstream indexer stages.
+- **Why not expose raw wire types**: Wire types bind downstream code to third-party RPC crate dependencies, complicating future migrations to WebSocket or Yellowstone gRPC streaming.
+
+#### 6. Explicit `is_signer` and `is_writable` Boolean Flags in `AccountMeta`
+- **Why explicit boolean flags**: Solana transactions compile accounts into flat index tables where permissions depend on position relative to `num_required_signatures` and `num_readonly_signed_accounts`. Modeling `AccountMeta { pubkey, is_signer, is_writable }` explicitly translates low-level index packing into clear, type-safe permission semantics.
+- **Why not raw indices**: Raw indices force decoder logic to repeatedly cross-reference header counts, creating easy-to-miss permission bugs and security vulnerabilities.
+
+#### 7. Dependency Injection of `SolanaRpcClient` into CLI Dispatcher
+- **Why pass `&SolanaRpcClient`**: Passing a borrowed reference of `SolanaRpcClient` into `execute_command_with_client` allows unit tests to supply mocked clients or custom Devnet endpoints without hardcoding network connections into command branches.
+- **Why not instantiate client inside every CLI branch**: Creating fresh HTTP clients on every command wastes socket connections, ignores shared configuration, and prevents offline testing.
+
+
 

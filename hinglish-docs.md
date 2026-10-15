@@ -863,6 +863,95 @@ Yahan har TODO ke liye **concept, Solana mechanics aur syntax clues** diye gaye 
   - Isme koi `Option` nahi hota, seedha `u64` lamports milte hain.
   - Isko bas `self.execute_with_retry(|| ...)` closure ke sath call karke result return kar do!
 
+### 🔬 Module 1.6 Part B — Transaction Anatomy, Signatures History & CLI Live Pipeline Integration
+
+#### 📻 Intuition & Engineering Concept: Transaction vs Account, Signatures Array, aur CLI Live Wiring
+Part A me humne account ka single snapshot aur balance fetch karna seekha. Lekin indexer ka asli maksad kya hai?  
+**Timeline track karna!**  
+Agar kisi wallet ka balance 1000 se 100 ho gaya, toh indexer ko ye batana padega ki *kaunsa transaction hua tha, kis program ne execute kiya, aur kin accounts ne sign kiya tha!*
+
+Iske teen sabse important concepts hain:
+
+1. **Signatures History (`getSignaturesForAddress`):**
+   - Solana pe har account ke sath uske historical transactions ki ek chain judi hoti hai.
+   - Jab hum RPC node se `get_signatures_for_address(pubkey)` maangte hain, toh wo humein `RpcConfirmedTransactionStatusWithSignature` ki list deta hai.
+   - Is list me har transaction ka unique 64-byte `Signature`, confirmation `slot`, timestamp `block_time`, aur execution status (`err: Option<TransactionError>`) hota hai.
+   - Hum is raw status list ko hamare domain model `TransactionRecord` me map kar lete hain!
+
+2. **Transaction Anatomy (`Message`, `Instruction`, `AccountMeta`):**
+   - Solana par transaction Ethereum jaisa simple "from -> to -> amount" nahi hota! Ye ek mini execution package hota hai:
+     - **Signatures (`Vec<Signature>`)**: Jin jin logon ke private key ne transaction sign kiya unke Ed25519 signatures.
+     - **Message Header**: Ye batata hai ki pehle kitne accounts signers hain (`num_required_signatures`), kitne read-only hain, aur kitne writeable hain.
+     - **Account Keys (`Vec<Pubkey>`)**: Transaction me use hone wale saare accounts ki flat list.
+     - **Instructions (`Vec<CompiledInstruction>`)**: Kaunse program ko call karna hai (`program_id_index`), kin accounts ko pass karna hai (`accounts`), aur binary payload kya hai (`data`).
+     - **`AccountMeta` Permissions**:
+       - `is_signer: bool` $\to$ Kya is account ka signature verify hua hai?
+       - `is_writable: bool` $\to$ Kya ye program is account ke lamports ya data ko mutate (badal) sakta hai?
+
+3. **Wiring CLI to Live RPC (The Operational Deliverable):**
+   - Module 1.4 me hamara CLI sirf dummy strings print karta tha (`"Fetching account: ..."`).
+   - Ab hum CLI dispatcher `execute_command_with_client` me live `SolanaRpcClient` pass karenge!
+   - `account <pubkey>` run karne par wo live Devnet se account data laakar clean format me print karega:
+     ```text
+     [+] Account: 11111111111111111111111111111111
+     [+] Owner: 11111111111111111111111111111111
+     [+] Balance: 1000000000 lamports (1.0000 SOL)
+     [+] Slot: 284910283
+     [+] Data Length: 0 bytes
+     ```
+   - `tx <signature>` run karne par wo live transaction signature status print karega!
+
+#### 🏗️ Architecture & Data Flow:
+
+```text
+ User Terminal: cargo run -- account <PUBKEY>
+                  |
+                  v
+       +--------------------+
+       |   src/cli.rs       | ---> Parses Commands::Account { pubkey }
+       +--------------------+
+                  |
+                  v
+       +--------------------+
+       |  SolanaRpcClient   | ---> execute_with_retry(|| get_account_with_commitment)
+       +--------------------+
+                  | (HTTP JSON-RPC with 429 Retry Armor)
+                  v
+       +--------------------+
+       | Solana Devnet Node | ---> Returns RpcResponse { context, value: Account }
+       +--------------------+
+                  |
+                  v
+       +--------------------+
+       |  AccountSnapshot   | ---> Formatted live terminal report!
+       +--------------------+
+```
+
+#### 💭 Plain Thought Translation (Dimaag Me Code Kaise Sochna Hai)
+> *"Pehle address se uske saare past transactions ki list maango (`get_signatures_for_address`). Raw RPC status se signature string ko Ed25519 `Signature` me parse karo, check karo ki `err.is_none()` hai ya nahi, aur hamare clean `TransactionRecord` me map karo. Transaction ke andar ke accounts ko bina soche access mat karo; check karo ki kya wo `is_signer` tha aur kya program ke paas `is_writable` permission thi. End me CLI ke dummy strings ko hatao aur live `SolanaRpcClient` se wire karo taaki terminal pe real on-chain data print ho!"*
+
+#### 📝 Skeleton TODO Guide (Logic Flow, Types & Syntax Clues)
+
+##### 🔹 `TODO(1)`: `get_signatures_for_address(&self, pubkey: &Pubkey) -> Result<Vec<TransactionRecord>, IndexerError>`
+- **Solana API**:
+  - `self.client.get_signatures_for_address(pubkey)` call karo inside `self.execute_with_retry(|| ...)`.
+  - Iska response ek `Vec<RpcConfirmedTransactionStatusWithSignature>` hota hai.
+- **Mapping Logic**:
+  - Iterator chalao: `raw_statuses.into_iter().map(|status| ...).collect()`.
+  - Signature string se `Signature::from_str(&status.signature).map_err(...)` parse karo.
+  - Success boolean: `status.err.is_none()`.
+  - `TransactionRecord::new(sig, status.slot, status.block_time, success)` bana kar return karo!
+
+##### 🔹 `TODO(2)`: CLI Live Wiring (`execute_command_with_client`)
+- **CLI Dispatcher Logic**:
+  - `Commands::Account { pubkey }`:
+    - Base58 string se `Pubkey::from_str(&pubkey)` parse karo.
+    - `client.get_account(&pk)?` call karo.
+    - Clean formatted string return karo jisme Pubkey, Owner, Lamports, SOL balance, aur Slot ho.
+  - `Commands::Tx { signature }`:
+    - `Signature::from_str(&signature)` parse karo.
+    - Verified signature receipt format return karo.
+
 ### 🧠 Andar Ki Baat (Rust Decisions in Fun & Deep Hinglish):
 1. **`CommitmentConfig::confirmed()` Kyun?**
    - `processed` pe live read karoge toh block drop hone par database me garbage reh jayega. `finalized` pe padhoge toh 13 seconds late ho jaoge. `confirmed` real-time streaming ke liye industry standard hai (66%+ stake finalized).
@@ -898,6 +987,10 @@ Yahan har TODO ke liye **concept, Solana mechanics aur syntax clues** diye gaye 
 | **Commitment Level** | `CommitmentConfig::confirmed()` | `processed` (high fork reorg hazard), `finalized` (13s latency penalty) |
 | **Rate-Limit Retry Backoff**| Exponential Backoff (`2^attempt`) | Fixed Sleep / Busy-wait (Causes thundering herd congestion on RPC endpoint) |
 | **Retry Abstraction** | Generic Closure (`FnMut`) | Duplicate retry loops in each RPC method (Violates DRY, error-prone) |
+| **Transaction Signatures** | `Vec<TransactionRecord>` (Domain) | Raw RPC status wire types (Ties downstream logic to specific RPC crate) |
+| **Transaction Permissions**| Explicit `AccountMeta { is_signer, is_writable }` | Raw index lookup relative to header count (Bug-prone index arithmetic) |
+| **CLI Dispatch Architecture**| Dependency Injection (`&SolanaRpcClient`) | Hardcoded client instantiation in every branch (Leaks sockets, blocks testing) |
+
 
 ---
 *Ye file lagataar update hoti rahegi jaise jaise hum aage ke modules aur advanced multi-stage pipeline banayenge!* 🚀

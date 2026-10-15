@@ -34,11 +34,99 @@ fn example() -> Result<(), IndexerError> {
 **My attempt:** *(paste here when ready, even if broken/partial)*
 ```
 
----
-
 ## Open / In-Progress
 
-*(None)*
+### Exercise 1.6b (Day 1) — Signatures History, Transaction Anatomy & CLI Live Wiring
+**Status:** open
+**Goal:** Implement `get_signatures_for_address` on `SolanaRpcClient` converting RPC statuses into domain `Vec<TransactionRecord>`, and wire `SolanaRpcClient` into `src/cli.rs` (`execute_command_with_client`) so CLI commands `account <PUBKEY>` and `tx <SIG>` query live Devnet blockchain state.
+
+**Skeleton:**
+```rust
+// ==========================================
+// Part 1: In src/rpc.rs
+// ==========================================
+use solana_client::client_error::ClientError;
+use solana_client::rpc_client::RpcClient;
+use solana_sdk::commitment_config::CommitmentConfig;
+use solana_sdk::pubkey::Pubkey;
+use solana_sdk::signature::Signature;
+use std::str::FromStr;
+use std::time::Duration;
+
+use crate::error::IndexerError;
+use crate::models::account::AccountSnapshot;
+use crate::models::transaction::TransactionRecord;
+
+// ... Inside impl SolanaRpcClient ...
+
+    pub fn get_signatures_for_address(
+        &self,
+        pubkey: &Pubkey,
+    ) -> Result<Vec<TransactionRecord>, IndexerError> {
+        // TODO(1): Query transaction signatures with retry armor using self.execute_with_retry
+        //          calling self.client.get_signatures_for_address(pubkey)
+        
+        // TODO(2): Map each RpcConfirmedTransactionStatusWithSignature into our domain TransactionRecord:
+        //          - parse status.signature with Signature::from_str(&status.signature)
+        //            mapping any parse error to IndexerError::InvalidPubkey(e.to_string())
+        //          - check if status.err.is_none() for success boolean
+        //          - instantiate TransactionRecord::new(sig, status.slot, status.block_time, success)
+        //          - return Ok(records)
+        todo!()
+    }
+
+// ==========================================
+// Part 2: In src/cli.rs
+// ==========================================
+use clap::{Parser, Subcommand};
+use solana_sdk::pubkey::Pubkey;
+use solana_sdk::signature::Signature;
+use std::str::FromStr;
+
+use crate::error::IndexerError;
+use crate::rpc::SolanaRpcClient;
+
+pub fn execute_command_with_client(
+    cmd: &Commands,
+    client: &SolanaRpcClient,
+) -> Result<String, IndexerError> {
+    match cmd {
+        Commands::Account { pubkey } => {
+            // TODO(3): Parse base58 pubkey string into Pubkey using Pubkey::from_str
+            //          mapping error to IndexerError::InvalidPubkey(e.to_string())
+            
+            // TODO(4): Query live account snapshot using client.get_account(&pk)?
+            //          Calculate sol balance (acc.lamports as f64 / 1_000_000_000.0)
+            //          Return formatted multi-line summary string:
+            //          format!("[+] Account: {}\n[+] Owner: {}\n[+] Balance: {} lamports ({:.4} SOL)\n[+] Slot: {}\n[+] Data Length: {} bytes",
+            //                  acc.pubkey, acc.owner, acc.lamports, sol, acc.slot, acc.data.len())
+            todo!()
+        }
+        Commands::Tx { signature } => {
+            // TODO(5): Parse signature string into Signature using Signature::from_str
+            //          mapping error to IndexerError::InvalidPubkey(e.to_string())
+            
+            // TODO(6): Return formatted confirmation string:
+            //          format!("[+] Transaction Signature: {}\n[+] Verified Ed25519 cryptographic receipt format.", sig)
+            todo!()
+        }
+        Commands::Watch { program_id } => {
+            Ok(format!("Watching program: {}", program_id))
+        }
+        Commands::Backfill { program_id, since } => {
+            if let Some(s) = since {
+                Ok(format!("Backfilling program: {} since slot {}", program_id, s))
+            } else {
+                Ok(format!("Backfilling program: {} from beginning", program_id))
+            }
+        }
+        Commands::Stats => Ok(format!("Displaying indexer statistics")),
+    }
+}
+```
+**Constraints:** Do not change method signatures. Wrap all RPC calls in `execute_with_retry`. Do not use `unwrap()` or `expect()` in non-test code.
+**Hints used:** 0/3
+**My attempt:** *(paste here when ready, even if broken/partial)*
 
 ---
 

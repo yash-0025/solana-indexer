@@ -121,4 +121,27 @@
 > 2. **Rate-Limiting (HTTP 429)**: Public and commercial RPC providers enforce aggressive rate limits. When query bursts exceed quotas, the node returns HTTP 429 ("Too Many Requests"). A production indexer must encapsulate `RpcClient` inside a resilient wrapper (`SolanaRpcClient`) that intercepts rate limit errors and applies exponential backoff with retries instead of panicking or failing the ingestion pipeline.
 > 3. **Domain Type Harmonization**: `solana-client` returns raw `solana_sdk::account::Account` and `solana_client::client_error::ClientError`. The wrapper maps these external types into our pipeline's domain models—converting successful `get_account_with_commitment` responses into slot-stamped `AccountSnapshot` models, missing accounts into `IndexerError::AccountNotFound`, and rate-limited failures into `IndexerError::RateLimited`.
 
+---
+
+### 1.6b — Transaction Anatomy, Signatures History & CLI Pipeline Wiring (The Bank Clearinghouse Audit Register & Teller Window)
+
+**ELI5 (domain analogy):**
+> Imagine an investigator at a regional bank clearinghouse who has successfully audited an individual vault account's balance. Checking the balance tells you how much gold is in the vault *right now*, but it tells you nothing about *how it got there or who transferred it away*. To reconstruct the timeline, the investigator consults the **Notary's Transaction Audit Register**:
+> 1. First, you ask the archive clerk for all transaction voucher numbers that touched this vault account (`get_signatures_for_address`). You receive a chronological list of voucher receipts stamped with confirmation dates and success/failure seals.
+> 2. Next, you pull an individual voucher receipt and examine the **Anatomy of the Transaction**:
+>    - **The Authorized Signatures**: Who physically signed and stamped the transfer slip with their Ed25519 seal (`is_signer`)?
+>    - **The Account Access Permissions**: Which bank accounts were marked read-only (audited balances) and which were marked read-write (`is_writable`, balances permitted to change)?
+>    - **The Instructions**: The itemized transfer commands detailing what program was invoked and what payload bytes were executed.
+> 3. Finally, you connect the Station Master's Dispatch Console (the CLI) directly to this inquiry window. When an auditor enters `account <pubkey>` or `tx <signature>`, the console queries the live cluster through the retry armor and prints formatted ledger proofs on screen.
+
+**Technical explanation:**
+> In Solana, account state inspection represents static snapshots, whereas indexing requires chronological transaction history. Every transaction execution that mutates or references an account leaves a cryptographic receipt on the ledger:
+> 1. **Signature History (`getSignaturesForAddress`)**: Querying `get_signatures_for_address` returns an ordered vector of `RpcConfirmedTransactionStatusWithSignature` structs. Each record contains the base58 `Signature`, confirmation `slot`, optional Unix `block_time`, and an optional `TransactionError`. An indexer converts these into internal `TransactionRecord` domain models, identifying successful vs failed state transitions (`err.is_none()`).
+> 2. **Transaction Anatomy (`Message`, `Instruction`, `AccountMeta`)**: A Solana transaction comprises:
+>    - A cryptographic signature array (`Vec<Signature>`).
+>    - A serialized `Message` containing a `MessageHeader` (specifying count of required signers, readonly signed accounts, and readonly unsigned accounts), an ordered array of 32-byte `account_keys`, a recent blockhash (providing 150-slot TTL replay prevention), and an array of `CompiledInstruction` items.
+>    - In Solana's runtime execution model, each account referenced in an instruction is assigned an `AccountMeta` descriptor specifying two crucial permission flags: `is_signer` (whether a cryptographic signature from this key was verified in the transaction header) and `is_writable` (whether the program has permission to mutate the account's lamports or data bytes).
+> 3. **CLI Integration**: To complete the operational deliverable for Module 1.6, the `Commands` dispatcher in `src/cli.rs` and `src/main.rs` is connected to `SolanaRpcClient`. Invoking `account` parses the base58 `Pubkey`, queries `client.get_account(&pubkey)`, and prints formatted owner, lamport, and slot metadata. Invoking `tx` parses the base58 `Signature` and displays the verified on-chain confirmation record.
+
+
 

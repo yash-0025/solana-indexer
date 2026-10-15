@@ -7,6 +7,43 @@
 ## 2026-10-15
 
 <details>
+<summary>2026-10-15 — EXERCISES.md — Add Exercise 1.6b Skeleton for Signatures History, Transaction Anatomy & CLI Live Wiring</summary>
+
+**Before:**
+```markdown
+## Open / In-Progress
+
+*(None)*
+```
+
+**After:**
+```markdown
+## Open / In-Progress
+
+### Exercise 1.6b (Day 1) — Signatures History, Transaction Anatomy & CLI Live Wiring
+**Status:** open
+**Goal:** Implement `get_signatures_for_address` on `SolanaRpcClient` converting RPC statuses into domain `Vec<TransactionRecord>`, and wire `SolanaRpcClient` into `src/cli.rs` (`execute_command_with_client`) so CLI commands `account <PUBKEY>` and `tx <SIG>` query live Devnet blockchain state.
+```
+
+**Diff:**
+```diff
+--- EXERCISES.md
++++ EXERCISES.md
+@@ -37,3 +37,91 @@
+-## Open / In-Progress
+-
+-*(None)*
++## Open / In-Progress
++
++### Exercise 1.6b (Day 1) — Signatures History, Transaction Anatomy & CLI Live Wiring
++**Status:** open
++**Goal:** Implement `get_signatures_for_address` on `SolanaRpcClient` converting RPC statuses into domain `Vec<TransactionRecord>`, and wire `SolanaRpcClient` into `src/cli.rs` (`execute_command_with_client`) so CLI commands `account <PUBKEY>` and `tx <SIG>` query live Devnet blockchain state.
+```
+
+**Why:** Resumed Module 1.6 Part B per `/next` sprint workflow to teach transaction history querying, transaction permission anatomy (`AccountMeta`), and live CLI dispatcher wiring with resilient retry armor.
+</details>
+
+<details>
 <summary>2026-10-15 — EXERCISES.md, SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, social.md — Record Solution 1.6 & Social Journey Content</summary>
 
 **Before:**
