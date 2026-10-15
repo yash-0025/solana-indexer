@@ -4,7 +4,125 @@
 
 ---
 
+## 2026-10-15
+
+<details>
+<summary>2026-10-15 — EXERCISES.md, SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, social.md — Record Solution 1.6 & Social Journey Content</summary>
+
+**Before:**
+- `EXERCISES.md`: Exercise 1.6 was listed as `Status: open` under `## Open / In-Progress`.
+- `SOLUTIONS.md`: Ended at Solution 1.5.
+- `SOLUTIONS_EXPLANATIONS.md`: Ended at Solution 1.5.
+- `social.md`: Ended at Module 1.5 content.
+
+**After:**
+- `EXERCISES.md`: Moved Exercise 1.6 to `## Solved` with `Status: solved` and verified attempt against test suite.
+- `SOLUTIONS.md`: Appended Solution 1.6 reference implementation, "why this & why not that", and comparison with learner's passing attempt.
+- `SOLUTIONS_EXPLANATIONS.md`: Appended Solution 1.6 plain English thought translation and exhaustive syntax breakdown.
+- `social.md`: Added Day 1 Module 1.6 (Part A) standalone posts and 4-tweet threads in both English and Hinglish with distinct creative angles and strictly verified character counts ($\le 280$ chars per tweet).
+
+**Why:** Learner resolved Exercise 1.6 with all unit tests passing (`cargo test -- --test-threads=1`), enabling formal closure of Exercise 1.6 and creation of public dev journey content per Rules 2, 7, 19, 20, 24, and 25.
+</details>
+
+<details>
+<summary>2026-10-15 — cheatsheet.md — Expand into 28-Section Master Encyclopedia with Parsing, Safe Indexing, Format Specifiers & std::mem Tricks</summary>
+
+**Before:**
+- Sections 23-26 lacked critical daily standard methods such as string/number parsing (`.parse::<u64>()`, `Pubkey::from_str()`, `.as_bytes()`, `from_utf8_lossy()`), panic-proof safe indexing (`.get()`, `.first()`, `.last()`, `.split_at()`), iterator combinators (`.enumerate()`, `.zip()`, `.take()`, `.skip()`, `.flat_map()`), Solana ecosystem crates (`bs58`, `bincode`, `tracing`, `chrono`, `dotenvy`), logging & compiler lints (`#[allow(unused)]`, `#[serde(skip)]`, `#[serde(flatten)]`), string formatting codes (`{:#?}`, `{:02x}`, `{:.2}`), and ownership bypass tricks (`std::mem::take`, `replace`, `swap`).
+
+**After:**
+- Expanded `cheatsheet.md` into 28 comprehensive sections:
+  - Section 23 expanded to 50+ essential methods including parsing, raw byte conversions, panic-safe indexing (`.get(i)`), iterator combinators, and Option/Result status checkers.
+  - Section 24 expanded with Solana infrastructure crates (`bs58`, `bincode`, `tracing`, `chrono`, `dotenvy`, `reqwest`).
+  - Section 25 expanded with logging macros (`info!`, `warn!`, `error!`), build-time macros (`env!`), and compiler lint suppressors (`#[allow(unused)]`, `#[serde(skip)]`, `#[serde(flatten)]`).
+  - Added Section 27: Print & String Formatting Specifiers Cheat-Grid (`{}`, `{:?}`, `{:#?}`, `{:x}`, `{:02x}`, `{:.2}`, padding).
+  - Added Section 28: Memory Mutation & Ownership Tricks (`std::mem::take`, `std::mem::replace`, `std::mem::swap`).
+
+**Why:** Learner felt that crucial everyday patterns, safe access methods, formatting codes, and ecosystem libraries were still missing from the reference encyclopedia.
+</details>
+
+<details>
+<summary>2026-10-15 — cheatsheet.md — Expand into 26-Section Master Encyclopedia with Standard Library Dictionary, Crate Guide & Macro Zoo</summary>
+
+**Before:**
+- `cheatsheet.md` focused predominantly on core language grammar and semantics (symbols, traits, lifetimes, async, generics), lacking explicit documentation on ubiquitous standard library methods (`.pow()`, `.contains()`, `.saturating_sub()`, `.chunks()`, `Duration::from_millis()`, `std::thread::sleep()`), the Solana indexer crate stack in `Cargo.toml`, the Macro Zoo (`#[derive]` vs `#[error]` vs `#[arg]` vs bang macros), and how engineers discover functions without memorization.
+
+**After:**
+- Expanded `cheatsheet.md` into 26 comprehensive sections:
+  - Added Section 23: The Standard Library Essential Method Dictionary covering the top 35 methods across Numbers, Strings, Vectors/Slices, Time/Sleep, and OS/Env.
+  - Added Section 24: The Solana Indexer Crate Stack & Dependency Guide demystifying `Cargo.toml` dependencies (`solana-client`, `solana-sdk`, `clap`, `thiserror`, `anyhow`, `serde`, `tokio`, `borsh`) and Cargo feature flags.
+  - Added Section 25: The Complete Macro & Attribute Zoo distinguishing Bang macros (`!`), Derive macros (`#[derive]`), and Attribute metadata macros (`#[...]`).
+  - Added Section 26: The Senior Engineer Secret on discovering functions via Autocomplete, `docs.rs`, and standard library indexing without rote memorization.
+
+**Why:** Learner called out that real-world Rust programming involves a vast surface area of built-in functions, crates, dependencies, and macros that felt mysterious and overwhelming without a centralized reference.
+</details>
+
+<details>
+<summary>2026-10-15 — cheatsheet.md — Expand into 22-Section Definitive Encyclopedia with Double Deref (**) & Master Decision Matrix</summary>
+
+**Before:**
+- `cheatsheet.md` lacked explicit explanations of double dereferencing (`**`), reborrowing (`&mut *`), pattern-level `ref` / `ref mut`, HashMap entry API (`.entry().or_insert()`), and crucially, lacked an explicit "When to Use What" comparison matrix for deciding between language constructs.
+
+**After:**
+- Expanded `cheatsheet.md` into 22 comprehensive sections:
+  - Added Section 2 deep breakdown of `**` (double dereference) unpacking the iterator closure `&&T` trap.
+  - Added `&mut *` (reborrowing mutable pointers).
+  - Added Section 3: The Master "When To Use What" Decision Matrix covering argument passing, single vs double dereference, strings (`&str` vs `String` vs `Cow`), memory buffers (`[u8; 32]` vs `&[u8]` vs `Vec<u8>`), error handling, polymorphism, multithreading, and copy vs clone.
+  - Added Section 17: HashMaps & Fast Lookups (`.entry()`, `or_insert()`).
+  - Added Section 22: Diagnostic Checklist expanded to top 7 compiler errors with instant fixes.
+  - Formatted every single construct with strict "🎯 KAB USE KAREIN" and "❌ KAB USE NA KAREIN" rules.
+
+**Why:** Learner specifically requested coverage for `**` and explicit "When To Use" decision guidelines for every construct so they can choose the right tool without anxiety.
+</details>
+
+<details>
+<summary>2026-10-15 — cheatsheet.md — Expand into 20-Section Comprehensive Rust & Solana Systems Encyclopedia</summary>
+
+**Before:**
+- `cheatsheet.md` had 9 basic introductory sections, lacking advanced systems concepts such as Lifetimes (`'a`, `'static`), Smart Pointers (`Arc`, `Mutex`, `RwLock`), Async/Tokio (`.await`, `mpsc::channel`), Iterators & Turbofish (`::<T>()`), Type Conversions (`as`, `From`/`Into`, `TryFrom`), Byte Slicing (`[u8; 32]` vs `&[u8]`), Combinators (`.map_err()`, `.ok_or()`), Modules (`pub(crate)`, `super`), and Borsh binary serialization.
+
+**After:**
+- Expanded `cheatsheet.md` into a complete 20-section encyclopedia:
+  1. The 5 Universal Mental Rules of Rust.
+  2. Symbols & Operators Decoder (`*`, `&`, `&mut`, `?`, `::`, `!`, `_`, `..`, `..=`).
+  3. Strings Demystified (`&str` vs `String` vs `to_string()` vs `format!()`).
+  4. Memory Containers (`Vec`, `Box`, `Option`, `Result`).
+  5. Derive Macros & Core Traits (`Debug`, `Clone`, `Copy`, `PartialEq`, `Eq`, `Default`, `Hash`, `Serialize`).
+  6. Closures & Functional Syntax (`||`, `|x|`, `move ||`, `Fn`, `FnMut`, `FnOnce`).
+  7. Generics & The Turbofish (`<T, F>`, `where`, `Self` vs `self`, `::<T>()`).
+  8. Pattern Matching & Unwrapping (`match`, `if let`, `while let`, `?`, `unwrap`, `expect`).
+  9. Lifetimes Demystified (`'a`, `'static`, `<'a>`).
+  10. Smart Pointers & Concurrency (`Arc`, `Rc`, `Mutex`, `RwLock`, `RefCell`).
+  11. Async / Await & Tokio (`async fn`, `.await`, `tokio::spawn`, `mpsc::channel`, `Send + Sync`).
+  12. Iterators & Functional Pipelines (`.iter()`, `.into_iter()`, `.map()`, `.filter()`, `.collect()`).
+  13. Type Conversions & Casting (`as`, `From`, `Into`, `TryFrom`, `AsRef`, Deref Coercion).
+  14. Bytes, Arrays & Slices (`[u8; 32]` vs `&[u8]` vs `Vec<u8>`).
+  15. Result & Option Combinators (`.map_err()`, `.unwrap_or()`, `.ok_or()`, `.and_then()`).
+  16. Modules, Visibility & Imports (`mod`, `use`, `pub`, `pub(crate)`, `super`, `crate`).
+  17. Attributes & Macro Directives (`#[cfg(test)]`, `#[derive]`, `todo!()`, `panic!()`).
+  18. Solana SDK Domain Types in Rust (`Pubkey`, `Signature`, `Account`, `CommitmentConfig`, `RpcResponse`).
+  19. Binary Serialization: Borsh vs Serde (`BorshSerialize`, `BorshDeserialize`).
+  20. The Diagnostic Checklist: Top 5 Compiler Errors & Instant Fixes.
+
+**Why:** Learner pointed out that major real-world Rust and Solana mechanisms were still missing; created an all-encompassing, single-source reference to eliminate any future guesswork.
+</details>
+
+<details>
+<summary>2026-10-15 — cheatsheet.md — Create The Ultimate Rust Mental Decoder & Survival Cheatsheet</summary>
+
+**Before:**
+- No dedicated `cheatsheet.md` existed in workspace; learners had to piece together disparate syntax patterns, symbols (`*`, `&`, `?`, `||`), string variants (`&str` vs `String`), derive macros, and generics across different docs.
+
+**After:**
+- Created `cheatsheet.md` with 9 comprehensive, high-signal sections in Hinglish and English.
+
+**Why:** Learner experienced severe cognitive overwhelm and anxiety from encountering cryptic Rust symbols and syntax patterns without a centralized mental decoder ring; provided a permanent, structured reference to eliminate confusion.
+</details>
+
+---
+
 ## 2026-10-12
+
 
 <details>
 <summary>2026-10-12 — hinglish-docs.md, RULES.md, .agents/rules/hinglish-docs.md, Conversation.md — Establish Deep Pedagogical Skeleton TODO Guide Standard</summary>

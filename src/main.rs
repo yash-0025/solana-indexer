@@ -4,7 +4,7 @@ pub mod models;
 pub mod config;
 pub mod cli;
 pub mod error;
-
+pub mod rpc;
 
 
 fn main() {

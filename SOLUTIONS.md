@@ -894,4 +894,114 @@ mod tests {
 - **Matches:** 100% exact match! You implemented `IndexerError` with all 7 variants, exact display messages matching the test expectations, unit variant for `RateLimited`, `From<std::io::Error>` mapping to `StorageError(err.to_string())`, and all unit tests pass with zero compiler warnings.
 - **Difference:** None! Your implementation in `src/error.rs` passes all 16 tests in the test suite seamlessly.
 
+---
+
+### Solution 1.6 — Resilient Solana RPC Client & Rate-Limit Backoff
+
+```rust
+use solana_client::client_error::ClientError;
+use solana_client::rpc_client::RpcClient;
+use solana_sdk::commitment_config::CommitmentConfig;
+use solana_sdk::pubkey::Pubkey;
+use std::time::Duration;
+
+use crate::error::IndexerError;
+use crate::models::account::AccountSnapshot;
+
+pub struct SolanaRpcClient {
+    pub client: RpcClient,
+    pub commitment: CommitmentConfig,
+    pub max_retries: u32,
+    pub initial_backoff_ms: u64,
+}
+
+impl SolanaRpcClient {
+    pub fn new(rpc_url: &str) -> Self {
+        Self::new_with_config(
+            rpc_url,
+            CommitmentConfig::confirmed(),
+            3,
+            500,
+        )
+    }
+
+    pub fn new_with_config(
+        rpc_url: &str,
+        commitment: CommitmentConfig,
+        max_retries: u32,
+        initial_backoff_ms: u64,
+    ) -> Self {
+        Self {
+            client: RpcClient::new_with_commitment(rpc_url.to_string(), commitment),
+            commitment,
+            max_retries,
+            initial_backoff_ms,
+        }
+    }
+
+    pub fn is_rate_limited(err: &ClientError) -> bool {
+        let msg = err.to_string().to_lowercase();
+        msg.contains("429") || msg.contains("too many requests") || msg.contains("rate limit")
+    }
+
+    pub fn execute_with_retry<T, F>(&self, mut op: F) -> Result<T, IndexerError>
+    where
+        F: FnMut() -> Result<T, ClientError>,
+    {
+        for attempt in 0..=self.max_retries {
+            match op() {
+                Ok(val) => return Ok(val),
+                Err(e) => {
+                    if Self::is_rate_limited(&e) {
+                        if attempt < self.max_retries {
+                            let backoff = self.initial_backoff_ms * 2u64.pow(attempt);
+                            std::thread::sleep(Duration::from_millis(backoff));
+                            continue;
+                        } else {
+                            return Err(IndexerError::RateLimited);
+                        }
+                    } else {
+                        return Err(IndexerError::RpcError(e.to_string()));
+                    }
+                }
+            }
+        }
+        Err(IndexerError::RateLimited)
+    }
+
+    pub fn get_account(&self, pubkey: &Pubkey) -> Result<AccountSnapshot, IndexerError> {
+        let response = self.execute_with_retry(|| {
+            self.client.get_account_with_commitment(pubkey, self.commitment)
+        })?;
+
+        match response.value {
+            None => Err(IndexerError::AccountNotFound(pubkey.to_string())),
+            Some(acc) => Ok(AccountSnapshot::new(
+                *pubkey,
+                acc.owner,
+                acc.lamports,
+                acc.data,
+                response.context.slot,
+            )),
+        }
+    }
+
+    pub fn get_balance(&self, pubkey: &Pubkey) -> Result<u64, IndexerError> {
+        self.execute_with_retry(|| self.client.get_balance(pubkey))
+    }
+}
+```
+
+**Why this & why not that:**
+- `CommitmentConfig::confirmed()`: Reads from blocks confirmed by a 66%+ supermajority of validator stake, eliminating block reorg drops without the 13-second latency penalty of `finalized`.
+- Generic `execute_with_retry<T, F>` with `FnMut`: Eliminates copy-pasted retry loops across every RPC method. The caller passes a zero-argument closure capsule `||`, and the retry loop executes it as needed.
+- `2u64.pow(attempt)` Exponential Backoff: Waiting progressively longer (500ms -> 1000ms -> 2000ms) gives congested RPC nodes time to recover, preventing client-side thundering herd storms.
+- `match response.value` on `Option<Account>`: Solana RPC returns `Ok(value: None)` for non-existent or closed accounts. Matching on `None` converts this safely to domain `IndexerError::AccountNotFound` rather than crashing or propagating missing state.
+- `*pubkey` Dereference: `Pubkey` is a 32-byte `[u8; 32]` struct implementing `Copy`. Dereferencing `*pubkey` performs a zero-cost bitwise stack copy into the `AccountSnapshot` constructor.
+
+**Compared to your attempt:**
+- **Matches:** 100% exact match! You correctly implemented `new`, `new_with_config`, `is_rate_limited`, `execute_with_retry` with exponential backoff math and loop bounds, `get_account` with response slot extraction and `AccountNotFound` error mapping, and `get_balance` with closure forwarding.
+- **Difference:** None! After fixing the two minor typos (`ppubkey`, `sefl`) and closing braces, your code in `src/rpc.rs` compiles cleanly and passes all 4 unit tests.
+
+
 

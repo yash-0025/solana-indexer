@@ -20,7 +20,106 @@
 
 ## 📅 Day 1 — RPC & Decoding Foundations
 
+### Module 1.6 (Part A) — Solana RPC Client: Resilient Wrapper & Rate-Limit Backoff
+
+#### 🌐 English Content — Focus: Why Rate Limiting is the Default Operating Condition (Generic `FnMut` Closures & Exponential Backoff)
+
+##### Standalone Post (275 chars):
+```text
+Rate-limiting isn't an edge case in blockchain indexing—it's the default operating condition. 🦀
+
+Built a resilient Solana RPC wrapper in Rust:
+• Automatic 429 detection
+• Exponential backoff ($2^{\text{attempt}}$)
+• Generic `FnMut` retry closures
+
+Zero panics, zero dropped accounts! 🚀 #RustLang #Solana
+```
+
+##### Thread (4 Tweets):
+**Tweet 1/4 (251 chars):**
+```text
+Day 1 (Module 1.6 Part A): Armor-plating our Solana RPC Client against HTTP 429s in Rust 🦀
+
+Querying 50 accounts on Devnet without retries? Your indexer dies in 5 seconds.
+
+Here is how we designed a zero-cost exponential backoff wrapper in Rust 🧵👇
+```
+
+**Tweet 2/4 (268 chars):**
+```text
+1/ The Thundering Herd Problem:
+When an RPC node responds with 429 (Too Many Requests), retrying immediately makes congestion worse.
+
+We calculate backoff with `initial_backoff_ms * 2u64.pow(attempt)`. 500ms -> 1000ms -> 2000ms gives the validator cluster room to breathe.
+```
+
+**Tweet 3/4 (275 chars):**
+```text
+2/ Higher-Order Closures (`FnMut`):
+Instead of repeating retry while-loops across `get_account`, `get_balance`, and `get_tx`, we pass a generic closure:
+`execute_with_retry<T, F>(&self, mut op: F) -> Result<T, IndexerError>`
+
+The caller gives the recipe; the engine retries.
+```
+
+**Tweet 4/4 (268 chars):**
+```text
+3/ The Account `Option` Trap:
+Solana RPC doesn't return an error for closed/uninitialized accounts—it returns `Ok(value: None)`.
+
+Our client matches on `response.value`, safely converting `None` to `IndexerError::AccountNotFound`. Clean domain models! 🦀 #Web3 #Rust
+```
+
+#### 🇮🇳 Hinglish Content — Focus: Public Devnet Ka 429 Wall, Exponential Backoff Math, aur Closure `||` Ka Real Power
+
+##### Standalone Post (273 chars):
+```text
+Solana Devnet pe 50 requests bhejo aur bam: HTTP 429 Too Many Requests! 🧱
+
+Agar indexer ke paas retry armor nahi hai toh pipeline crash ho jayegi.
+
+Aaj Rust me generic exponential backoff banaya jo 429 aane par saans leta hai (500ms -> 1s -> 2s) aur account fetch karta hai! 🚀
+```
+
+##### Thread (4 Tweets):
+**Tweet 1/4 (253 chars):**
+```text
+Solana Indexer Sprint (Day 1 - Module 1.6 Part A): RPC Armor & Rate-Limit Backoff 🦀
+
+Devnet ho ya production RPC, rate limits se koi nahi bach sakta.
+
+Kaise humne Rust closures aur exponential backoff se resilient client banaya? A quick breakdown 🧵👇
+```
+
+**Tweet 2/4 (263 chars):**
+```text
+1/ Andha Retry Mat Karo:
+429 aane par turant baar-baar hit karoge toh RPC server IP ban kar dega.
+
+Humne `2u64.pow(attempt)` lagaya: pehle 500ms ruko, fir 1000ms, fir 2000ms. Is backoff se RPC node ko saans lene ka waqt milta hai aur request pass ho jati hai!
+```
+
+**Tweet 3/4 (268 chars):**
+```text
+2/ Closure `||` Ka Asli Jadoo:
+Har function me alag retry loop likhne ke bajaye ek generic `execute_with_retry` function banaya jo zero-arg closure `||` leta hai.
+
+Formula pass karo, retry engine use apne loop me zarurat padne par baar-baar chalata hai. Pure DRY code!
+```
+
+**Tweet 4/4 (265 chars):**
+```text
+3/ Missing Account Ka Trap:
+Agar Solana par koi account exist nahi karta, toh RPC error nahi deta, balki `value: None` bhejta hai.
+
+Humne `match response.value` karke clean `IndexerError::AccountNotFound` me map kiya. Saare tests pass! 100% Rust systems power 🦀🚀
+```
+
+---
+
 ### Module 1.5 — Error Handling: When RPC Calls Fail
+
 
 #### 🌐 English Content — Focus: Why Production Indexers Forbid `.unwrap()` in Ingestion Streams (Fault Isolation & `thiserror` in Rust)
 

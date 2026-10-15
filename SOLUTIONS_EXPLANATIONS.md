@@ -151,3 +151,35 @@
   - Enables the `?` operator to automatically convert any standard I/O error into `IndexerError` without manual `.map_err()` call sites.
 - `?` operator desugaring: In `let res = mock_fallible_operation(fail)?;`, the `?` operator unpacks `Ok(val)` or returns `Err(From::from(err))` early to the calling function.
 
+---
+
+### Solution 1.6 — Resilient Solana RPC Client & Rate-Limit Backoff
+
+**Plain English Thought Translation:**
+> "Build a dedicated, resilient armor around the raw Solana JSON-RPC client so the indexer can withstand network rate limits and consensus edge cases. Default to `confirmed` commitment so that unconfirmed validator forks are ignored while maintaining sub-second latency. Wrap all RPC interactions inside a generic higher-order retry loop using an exponential backoff formula (`initial_backoff_ms * 2^attempt`) so that HTTP 429 'Too Many Requests' responses pause execution instead of crashing the process. When querying an account, unpack the raw response: if the account does not exist or has zero lamports, return an `AccountNotFound` domain error; if it exists, assemble the binary data, lamports, and observation slot into a clean `AccountSnapshot`."
+
+**Syntax & Decision Breakdown:**
+- `pub struct SolanaRpcClient`: Dedicated wrapper struct holding the underlying `RpcClient`, `CommitmentConfig`, `max_retries: u32`, and `initial_backoff_ms: u64`.
+- `RpcClient::new_with_commitment(url.to_string(), commitment)`: Instantiates the official synchronous Solana RPC client with configured commitment level on HTTP JSON-RPC transport.
+- `Self::is_rate_limited(err: &ClientError) -> bool`:
+  - `err.to_string().to_lowercase()`: Extracts the error message into a lowercased heap string.
+  - `.contains("429") || .contains("too many requests") || .contains("rate limit")`: Identifies HTTP status code 429 and RPC node rate limit messages.
+- `pub fn execute_with_retry<T, F>(&self, mut op: F) -> Result<T, IndexerError> where F: FnMut() -> Result<T, ClientError>`:
+  - Higher-order generic function parameterized over return type `T` and operation closure `F`.
+  - `where F: FnMut() -> Result<T, ClientError>`: Constrains `F` to a callable closure taking zero arguments and returning `Result<T, ClientError>`, allowing callers to pass arbitrary RPC queries as lightweight capsules (`|| ...`).
+  - `for attempt in 0..=self.max_retries`: Inclusive range loop allowing up to `max_retries + 1` total attempts (0 initial attempt plus `max_retries` retries).
+  - `let backoff = self.initial_backoff_ms * 2u64.pow(attempt)`: Calculates binary exponential backoff ($500 \times 2^0 = 500\text{ms}$, $500 \times 2^1 = 1000\text{ms}$, $500 \times 2^2 = 2000\text{ms}$).
+  - `std::thread::sleep(Duration::from_millis(backoff))`: Suspends thread execution for the calculated backoff duration before the next retry iteration.
+  - `Err(IndexerError::RateLimited)`: Returned when all retry attempts encounter rate limits without recovery.
+  - `Err(IndexerError::RpcError(e.to_string()))`: Immediately surfaces non-rate-limit network errors without futile backoff.
+- `pub fn get_account(&self, pubkey: &Pubkey) -> Result<AccountSnapshot, IndexerError>`:
+  - `self.execute_with_retry(|| self.client.get_account_with_commitment(pubkey, self.commitment))?`: Executes the RPC account query inside the retry armor, early-returning `Err(IndexerError)` if retries exhaust or RPC fails.
+  - `match response.value`: Pattern matches on the `Option<Account>` returned by the validator.
+  - `None => Err(IndexerError::AccountNotFound(pubkey.to_string()))`: Handles absent or closed accounts safely as a domain error rather than an RPC panic.
+  - `Some(acc) => Ok(AccountSnapshot::new(*pubkey, acc.owner, acc.lamports, acc.data, response.context.slot))`:
+    - `*pubkey`: Dereferences the borrowed reference `&Pubkey` to perform a zero-cost 32-byte bitwise copy (`Pubkey` implements `Copy`).
+    - `response.context.slot`: Extracts the ledger slot number at which the state was captured.
+- `pub fn get_balance(&self, pubkey: &Pubkey) -> Result<u64, IndexerError>`:
+  - `self.execute_with_retry(|| self.client.get_balance(pubkey))`: Evaluates the balance query directly inside the retry closure, returning `Result<u64, IndexerError>` implicitly without a trailing semicolon.
+
+

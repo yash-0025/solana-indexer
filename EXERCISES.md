@@ -38,8 +38,14 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
+*(None)*
+
+---
+
+## Solved
+
 ### Exercise 1.6 (Day 1) — Resilient Solana RPC Client & Rate-Limit Backoff
-**Status:** open
+**Status:** solved
 **Goal:** Implement `SolanaRpcClient` wrapping `solana-client::RpcClient` with `confirmed` commitment, rate-limit detection, exponential backoff retry loop, and account/balance query helpers converting into `AccountSnapshot` and `IndexerError`.
 
 **Skeleton:**
@@ -184,14 +190,13 @@ mod tests {
 ```
 **Constraints:** Do not change struct or method signatures. Keep retry backoff formula exponential.
 **Hints used:** 0/3
-**My attempt:** *(paste here when ready, even if broken/partial)*
+**My attempt:** Verified in `src/rpc.rs` with passing unit tests (`cargo test -- --test-threads=1`).
 
 ---
 
-## Solved
-
 ### Exercise 1.5 (Day 1) — Resilient Error Handling & IndexerError with thiserror
 **Status:** solved
+
 **Goal:** Implement the custom `IndexerError` enum covering all 7 required domain variants using `thiserror` attributes and an automatic `From<std::io::Error>` conversion.
 
 **Skeleton:**

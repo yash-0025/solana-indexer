@@ -75,8 +75,27 @@ impl SolanaRpcClient {
     }
 
     pub fn get_account(&self, pubkey: &Pubkey) -> Result<AccountSnapshot, IndexerError> {
-        
+        let response = self.execute_with_retry(|| {
+            self.client.get_account_with_commitment(pubkey, self.commitment)
+        })?;
+
+        match response.value {
+            None => Err(IndexerError::AccountNotFound(pubkey.to_string())),
+            Some(acc) => Ok(AccountSnapshot::new(
+                *pubkey,
+                acc.owner,
+                acc.lamports,
+                acc.data,
+                response.context.slot,
+            )),
+        }
     }
+    
+    
+    pub fn get_balance(&self, pubkey: &Pubkey) -> Result<u64, IndexerError> {
+            self.execute_with_retry(|| self.client.get_balance(pubkey))
+        }
+
 }
 
 
