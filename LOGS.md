@@ -7,6 +7,43 @@
 ## 2026-10-15
 
 <details>
+<summary>2026-10-15 — SOLUTIONS.md, SOLUTIONS_EXPLANATIONS.md, EXERCISES.md — Record Solution 1.6b & Close Exercise Gate</summary>
+
+**Before:**
+- `SOLUTIONS.md`: Ended at Solution 1.6 (Part A).
+- `SOLUTIONS_EXPLANATIONS.md`: Ended at Solution 1.6 (Part A).
+- `EXERCISES.md`: Exercise 1.6b was listed as `Status: open` under `## Open / In-Progress`.
+
+**After:**
+- `SOLUTIONS.md`: Appended Solution 1.6b reference implementation, architectural trade-offs, and attempt comparison.
+- `SOLUTIONS_EXPLANATIONS.md`: Appended Solution 1.6b Plain English Thought Translation and exhaustive syntax breakdown.
+- `EXERCISES.md`: Moved Exercise 1.6b to `## Solved` with `Status: solved` and captured learner's attempt.
+
+**Diff:**
+```diff
+--- EXERCISES.md
++++ EXERCISES.md
+@@ -36,8 +36,14 @@
+-## Open / In-Progress
+-
+-### Exercise 1.6b (Day 1) — Signatures History, Transaction Anatomy & CLI Live Wiring
+-**Status:** open
++## Open / In-Progress
++
++*(None)*
++
++---
++
++## Solved
++
++### Exercise 1.6b (Day 1) — Signatures History, Transaction Anatomy & CLI Live Wiring
++**Status:** solved
+```
+
+**Why:** Learner provided a working conceptual attempt for `get_signatures_for_address` and explicitly requested the line-by-line solution per Step 3.5-D and Rules 2, 9, 11, 19, and 20.
+</details>
+
+<details>
 <summary>2026-10-15 — EXERCISES.md — Add Exercise 1.6b Skeleton for Signatures History, Transaction Anatomy & CLI Live Wiring</summary>
 
 **Before:**

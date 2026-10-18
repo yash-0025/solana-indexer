@@ -1003,5 +1003,117 @@ impl SolanaRpcClient {
 - **Matches:** 100% exact match! You correctly implemented `new`, `new_with_config`, `is_rate_limited`, `execute_with_retry` with exponential backoff math and loop bounds, `get_account` with response slot extraction and `AccountNotFound` error mapping, and `get_balance` with closure forwarding.
 - **Difference:** None! After fixing the two minor typos (`ppubkey`, `sefl`) and closing braces, your code in `src/rpc.rs` compiles cleanly and passes all 4 unit tests.
 
+---
+
+### Solution 1.6b — Signatures History, Transaction Anatomy & CLI Live Wiring
+
+```rust
+// ==========================================
+// Part 1: In src/rpc.rs
+// ==========================================
+use solana_client::client_error::ClientError;
+use solana_client::rpc_client::RpcClient;
+use solana_sdk::commitment_config::CommitmentConfig;
+use solana_sdk::pubkey::Pubkey;
+use solana_sdk::signature::Signature;
+use std::str::FromStr;
+use std::time::Duration;
+
+use crate::error::IndexerError;
+use crate::models::account::AccountSnapshot;
+use crate::models::transaction::TransactionRecord;
+
+impl SolanaRpcClient {
+    // ... existing methods: new, new_with_config, is_rate_limited, execute_with_retry, get_account, get_balance ...
+
+    pub fn get_signatures_for_address(
+        &self,
+        pubkey: &Pubkey,
+    ) -> Result<Vec<TransactionRecord>, IndexerError> {
+        let raw_statuses = self.execute_with_retry(|| {
+            self.client.get_signatures_for_address(pubkey)
+        })?;
+
+        raw_statuses
+            .into_iter()
+            .map(|status| {
+                let sig = Signature::from_str(&status.signature)
+                    .map_err(|e| IndexerError::InvalidPubkey(e.to_string()))?;
+                let success = status.err.is_none();
+                Ok(TransactionRecord::new(
+                    sig,
+                    status.slot,
+                    status.block_time,
+                    success,
+                ))
+            })
+            .collect()
+    }
+}
+
+// ==========================================
+// Part 2: In src/cli.rs
+// ==========================================
+use clap::{Parser, Subcommand};
+use solana_sdk::pubkey::Pubkey;
+use solana_sdk::signature::Signature;
+use std::str::FromStr;
+
+use crate::error::IndexerError;
+use crate::rpc::SolanaRpcClient;
+
+pub fn execute_command_with_client(
+    cmd: &Commands,
+    client: &SolanaRpcClient,
+) -> Result<String, IndexerError> {
+    match cmd {
+        Commands::Account { pubkey } => {
+            let pk = Pubkey::from_str(pubkey)
+                .map_err(|e| IndexerError::InvalidPubkey(e.to_string()))?;
+            let acc = client.get_account(&pk)?;
+            let sol = acc.lamports as f64 / 1_000_000_000.0;
+            Ok(format!(
+                "[+] Account: {}\n[+] Owner: {}\n[+] Balance: {} lamports ({:.4} SOL)\n[+] Slot: {}\n[+] Data Length: {} bytes",
+                acc.pubkey, acc.owner, acc.lamports, sol, acc.slot, acc.data.len()
+            ))
+        }
+        Commands::Tx { signature } => {
+            let sig = Signature::from_str(signature)
+                .map_err(|e| IndexerError::InvalidPubkey(e.to_string()))?;
+            Ok(format!(
+                "[+] Transaction Signature: {}\n[+] Verified Ed25519 cryptographic receipt format.",
+                sig
+            ))
+        }
+        Commands::Watch { program_id } => {
+            Ok(format!("Watching program: {}", program_id))
+        }
+        Commands::Backfill { program_id, since } => {
+            if let Some(s) = since {
+                Ok(format!("Backfilling program: {} since slot {}", program_id, s))
+            } else {
+                Ok(format!("Backfilling program: {} from beginning", program_id))
+            }
+        }
+        Commands::Stats => Ok(format!("Displaying indexer statistics")),
+    }
+}
+```
+
+**Why this & why not that:**
+- `raw_statuses.into_iter().map(...).collect()` on `Result`: In Rust, `collect()` can gather an iterator yielding `Result<T, E>` into `Result<Vec<T>, E>`. If any item fails to parse, it aborts early with that `Err`, otherwise producing a clean `Ok(Vec<T>)`.
+- `status.err.is_none()`: Solana transactions report on-chain errors via `Option<TransactionError>`. If `err` is `None`, the transaction executed successfully on-chain; if `Some`, it failed during runtime processing.
+- `execute_with_retry` on `get_signatures_for_address`: Address signature history queries frequently trigger rate limits on public nodes during heavy backfills. Enclosing it in `execute_with_retry` ensures historical ingestions do not abort on transient bursts.
+- `Pubkey::from_str` with `.map_err`: User CLI inputs are arbitrary strings. Explicitly converting them to `Pubkey` before network calls catches malformed base58 strings locally without wasting RPC round-trips.
+
+**Compared to your attempt:**
+- **Matches:** Excellent intuition! You correctly called `self.execute_with_retry(|| self.client.get_signatures_for_address(pubkey))?` and chose `.into_iter().map(|status| ...).collect()` for the conversion pipeline.
+- **Differences:**
+  1. Typo in trait import: `use std::str::FormStr;` $\to$ must be `FromStr` ("From", not "Form").
+  2. Typo in return type: `Vec<TransactoinRecord>` $\to$ must be `Vec<TransactionRecord>`.
+  3. Inside the closure, each `status` needed its `status.signature` parsed into a `Signature` via `Signature::from_str(&status.signature).map_err(...)`, `status.err.is_none()` checked for `success`, and `Ok(TransactionRecord::new(...))` returned so `collect()` can turn `Iterator<Item = Result<TransactionRecord, IndexerError>>` into `Result<Vec<TransactionRecord>, IndexerError>`.
+  4. Part 2 in `src/cli.rs` (`execute_command_with_client`) completed the live wire connecting the CLI to `SolanaRpcClient`.
+
+
 
 

@@ -1,4 +1,11 @@
 use clap::{Parser, Subcommand};
+use solana_sdk::pubkey::Pubkey;
+use solana_sdk::signature::Signature;
+use std::str::FromStr;
+
+
+use crate::error::IndexerError;
+use crate::rpc::SolanaRpcClient;
 
 #[derive(Parser, Debug)]
 #[command(name = "rust-indexer", about = "Solana Real-Time & Historical Blockchain Indexer")]
@@ -40,6 +47,45 @@ pub fn execute_command(cmd: &Commands) -> String {
     }
 }
 
+pub fn execute_command_with_client(cmd: &Commands, client: &SolanaRpcClient) -> Result<String, IndexerError> {
+    match cmd{
+        Commands::Account { pubkey } => {
+            let pk = Pubkey::from_str(pubkey).map_err(|e| IndexerError::InvalidPublickey(e.to_string()))?;
+
+
+            let acc = client.get_account(&pk)?;
+            let sol = acc.lamports as f64 / 1_000_000_000.0;
+
+            Ok(format!(
+                 "[+] Account: {}\n[+] Owner: {}\n[+] Balance: {} lamports ({:.4} SOL)\n[+] Slot: {}\n[+] Data Length: {} bytes",acc.pubkey, acc.owner, acc.lamports, sol, acc.slot, acc.data.len()
+            ))
+        }
+
+
+        Commands::Tx { signature } => {
+            let sig = Signature::from_str(signature).map_err(|e| IndexerError::InvalidPubkey(e.to_string()))?;
+
+            Ok(format!(
+                "[+] Transaction Signature: {}\n[+] Verified  Ed25519 cryptographic receipt format.", sig
+            ))
+        }
+
+
+        Commands::Watch { program_id } => {
+            Ok(format!("Watching program: {}", program_id))
+        }
+
+        Commands::Backfill { program_id, since } => {
+            if let Some(s) = since {
+                Ok(format!("Backfilling program: {} since slot {}", program_id, s))
+            } else {
+                Ok(format!("Backfilling program: {} from beginning", program_id))
+            }
+        }
+
+        Commands::Stats => Ok(format!("Displaying indexer statistics")),
+    }
+}
 
 #[cfg(test)]
 mod tests {

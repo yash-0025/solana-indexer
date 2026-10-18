@@ -2,12 +2,17 @@ use solana_client::client_error::ClientError;
 use solana_client::rpc_client::RpcClient;
 use solana_sdk::commitment_config::CommitmentConfig;
 use solana_sdk::pubkey::Pubkey;
+use solana_sdk::signature::Signature;
+use std::str::FromStr;
 use std::time::Duration;
+
 
 
 
 use crate::error::IndexerError;
 use crate::models::account::AccountSnapshot;
+use crate::models::transaction::TransactionRecord;
+
 
 
 
@@ -96,6 +101,28 @@ impl SolanaRpcClient {
             self.execute_with_retry(|| self.client.get_balance(pubkey))
         }
 
+    
+    pub fn get_signatures_for_address(&self, pubkey: &Pubkey ) -> Result<Vec<TransactionRecord> , IndexerError> {
+        let raw_statuses = self.execute_with_retry(|| self.client.get_signatures_for_address(pubkey))?;
+
+        raw_statuses.into_iter().map(|status| {
+            let sig = Signature::from_str(&status.signature).map_err(|e| IndexerError::InvalidPublickey(e.to_string()))?;
+
+
+            let success = status.err.is_none();
+
+            Ok(TransactionRecord::new(
+                sig,
+                status.slot,
+                status.block_time,
+                success,
+            ))
+        })
+
+        .collect()
+
+    }
+
 }
 
 
@@ -147,5 +174,15 @@ mod tests {
         assert_eq!(attempts, 3);
     }
 }
+
+
+
+
+
+
+
+
+
+
 
 

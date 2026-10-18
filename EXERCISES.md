@@ -36,8 +36,14 @@ fn example() -> Result<(), IndexerError> {
 
 ## Open / In-Progress
 
+*(None)*
+
+---
+
+## Solved
+
 ### Exercise 1.6b (Day 1) — Signatures History, Transaction Anatomy & CLI Live Wiring
-**Status:** open
+**Status:** solved
 **Goal:** Implement `get_signatures_for_address` on `SolanaRpcClient` converting RPC statuses into domain `Vec<TransactionRecord>`, and wire `SolanaRpcClient` into `src/cli.rs` (`execute_command_with_client`) so CLI commands `account <PUBKEY>` and `tx <SIG>` query live Devnet blockchain state.
 
 **Skeleton:**
@@ -126,7 +132,14 @@ pub fn execute_command_with_client(
 ```
 **Constraints:** Do not change method signatures. Wrap all RPC calls in `execute_with_retry`. Do not use `unwrap()` or `expect()` in non-test code.
 **Hints used:** 0/3
-**My attempt:** *(paste here when ready, even if broken/partial)*
+**My attempt:**
+```rust
+pub fn get_signatures_for_address(&self, pubkey: &Pubkey ) -> Result<Vec<TransactoinRecord> , IndexerError> {
+    let raw_status = self.execute_with_retry(|| self.client.get_signatures_for_address(pubkey))?;
+
+    raw_status.into_iter().map(|status| ...).collect()
+}
+```
 
 ---
 

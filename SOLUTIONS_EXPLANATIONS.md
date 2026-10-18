@@ -182,4 +182,35 @@
 - `pub fn get_balance(&self, pubkey: &Pubkey) -> Result<u64, IndexerError>`:
   - `self.execute_with_retry(|| self.client.get_balance(pubkey))`: Evaluates the balance query directly inside the retry closure, returning `Result<u64, IndexerError>` implicitly without a trailing semicolon.
 
+---
+
+### Solution 1.6b — Signatures History, Transaction Anatomy & CLI Live Wiring
+
+**Plain English Thought Translation:**
+> "To reconstruct an account's history, ask the RPC node for all transaction signatures that ever touched this public key (`get_signatures_for_address`), wrapped inside our retry armor. Take each raw wire status returned by the node and map it into our indexer's clean `TransactionRecord`: parse the base58 signature string into an Ed25519 `Signature` (halting early if corrupt), verify if execution was successful (`status.err.is_none()`), and record the confirmation slot and block time. In the CLI dispatcher, upgrade from static dummy strings to live cluster communication: parse user arguments into verified cryptographic primitives (`Pubkey`, `Signature`), query the cluster via `SolanaRpcClient`, and format real lamport balances, ownership, and slot numbers into a readable terminal output."
+
+**Syntax & Decision Breakdown:**
+- `pub fn get_signatures_for_address(&self, pubkey: &Pubkey) -> Result<Vec<TransactionRecord>, IndexerError>`:
+  - Takes a borrowed reference `&Pubkey` and returns a vector of domain `TransactionRecord`s or an `IndexerError`.
+- `self.execute_with_retry(|| self.client.get_signatures_for_address(pubkey))?`:
+  - Encloses the RPC call in our exponential backoff retry loop. The trailing `?` unrolls the outer `Result<Vec<RpcConfirmedTransactionStatusWithSignature>, IndexerError>`.
+- `raw_statuses.into_iter().map(|status| { ... }).collect()`:
+  - `.into_iter()`: Consumes the raw vector by value, yielding owned `status` records.
+  - `Signature::from_str(&status.signature).map_err(|e| IndexerError::InvalidPubkey(e.to_string()))?`:
+    - Parses the base58 signature string into a 64-byte Ed25519 `Signature`.
+    - If parsing fails, `.map_err()` converts the parse error into `IndexerError::InvalidPubkey`.
+    - The `?` inside the closure early-returns `Err(IndexerError)` from the closure.
+  - `let success = status.err.is_none()`: Checks whether the transaction succeeded without runtime faults.
+  - `Ok(TransactionRecord::new(sig, status.slot, status.block_time, success))`: Wraps the domain model in `Ok`.
+  - `.collect()`: Uses Rust's `FromIterator` implementation for `Result<Collection<T>, E>` to turn an iterator of `Result<TransactionRecord, IndexerError>` into `Result<Vec<TransactionRecord>, IndexerError>`.
+- `pub fn execute_command_with_client(cmd: &Commands, client: &SolanaRpcClient) -> Result<String, IndexerError>`:
+  - `Commands::Account { pubkey }`:
+    - `Pubkey::from_str(pubkey)`: Validates and parses base58 user input into a 32-byte public key.
+    - `client.get_account(&pk)?`: Fetches the live on-chain `AccountSnapshot` through the retry layer.
+    - `acc.lamports as f64 / 1_000_000_000.0`: Converts raw lamports ($10^{-9}$ SOL) to SOL with floating-point division.
+  - `Commands::Tx { signature }`:
+    - `Signature::from_str(signature)`: Validates base58 transaction signature format.
+    - Formats a receipt string verifying the cryptographic Ed25519 signature.
+
+
 
